@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.security import create_access_token
-from app.crud.crud_user import authenticate_user, create_user, get_user_by_email
+from app.crud.user import authenticate_user, create_user, get_user_by_email
 from app.models.user import User
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
@@ -43,7 +43,7 @@ async def login(
             detail="Неправильний email або пароль",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(subject=user.email)
+    access_token = create_access_token(subject=str(user.id))
     return Token(access_token=access_token, token_type="bearer")
 
 

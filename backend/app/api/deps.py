@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.crud.crud_user import get_user_by_email
+from app.crud.user import get_user_by_id
 from app.models.user import User
 from app.schemas.token import TokenPayload
 
@@ -21,7 +21,7 @@ async def get_current_user(
     """Декодує JWT, знаходить і повертає поточного користувача."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не вдалося перевірити облікові дані",
+        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -31,10 +31,11 @@ async def get_current_user(
         token_data = TokenPayload(sub=payload.get("sub"))
         if token_data.sub is None:
             raise credentials_exception
-    except jwt.InvalidTokenError:
+    except jwt.PyJWTError:
         raise credentials_exception
 
-    user = await get_user_by_email(db, email=token_data.sub)
+    user = await get_user_by_id(db, user_id=int(token_data.sub))
     if user is None:
         raise credentials_exception
     return user
+
