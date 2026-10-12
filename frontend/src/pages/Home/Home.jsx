@@ -6,6 +6,7 @@ import './Home.css';
 const AUDIENCE_POINTS = [
   'Для фермерів та господарств',
   'Зрозуміла рекомендація замість складних таблиць',
+  'Дані про ґрунт, погоду та ринок в одному місці',
 ];
 
 const VALUE_CARDS = [
@@ -13,21 +14,25 @@ const VALUE_CARDS = [
     id: 'field',
     title: 'Для конкретного поля',
     text: 'Рекомендації враховують особливості саме вашої ділянки.',
+    icon: 'value_card_1',
   },
   {
     id: 'complex',
     title: 'Комплексний аналіз',
     text: 'Поєднуємо дані про поле, погоду, ринок та логістику.',
+    icon: 'value_card_2',
   },
   {
     id: 'result',
     title: 'Зрозумілий результат',
     text: 'Ви отримуєте просту рекомендацію замість складних наборів даних.',
+    icon: 'value_card_3',
   },
   {
     id: 'data',
     title: 'На основі актуальних даних',
     text: 'Система враховує поточні умови сезону та ринку.',
+    icon: 'value_card_4',
   },
 ];
 
@@ -141,8 +146,8 @@ export default function Home() {
           <ul className="value-grid">
             {VALUE_CARDS.map((card) => (
               <li key={card.id} className="value-card">
-                <span className="value-card__icon">
-                  <Icon name="check" />
+                <span className="value-card_icon">
+                  <Icon name={card.icon} />
                 </span>
                 <h3 className="value-card__title">{card.title}</h3>
                 <p className="value-card__text">{card.text}</p>

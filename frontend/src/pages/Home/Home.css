@@ -196,8 +196,8 @@
   background: var(--color-brand-tint);
 }
 
-.value-card__icon {
-  display: grid;
+/*.value-card__icon {
+  /*display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
@@ -209,6 +209,26 @@
 .value-card__icon svg {
   width: 18px;
   height: 18px;
+}*/
+
+.value-card_icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  background-color: #19C463;
+  color: #19C463;
+
+  flex-shrink: 0;
+}
+
+.value-card_icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .value-card__title {
