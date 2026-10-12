@@ -103,10 +103,6 @@ export default function Home() {
       <section className="hero" aria-labelledby="hero-title">
         <div className="container">
           <div className="hero__copy">
-            <p className="chip">
-              <Icon name="sprout" />
-              <span>SIVAY · РОЗУМНЕ ФЕРМЕРСТВО</span>
-            </p>
             <h1 id="hero-title" className="hero__title">
               Обирайте найперспективнішу культуру для свого поля
             </h1>

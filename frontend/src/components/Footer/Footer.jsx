@@ -23,7 +23,6 @@ export default function Footer() {
               </span>
               <span className="footer__brand-text">
                 <span className="footer__brand-name">SIVAY</span>
-                <span className="footer__brand-tagline">Розумне фермерство</span>
               </span>
             </div>
             <p className="footer__description">

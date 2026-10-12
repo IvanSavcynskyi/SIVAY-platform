@@ -97,7 +97,6 @@ export default function Header({ activeLink = 'home' }) {
           </span>
           <span className="header__brand-text">
             <span className="header__brand-name">SIVAY</span>
-            <span className="header__brand-tagline">Розумне фермерство</span>
           </span>
         </AppLink>
 
