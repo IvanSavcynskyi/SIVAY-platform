@@ -1,7 +1,7 @@
 .footer {
   --footer-divider-height: 96px;
 
-  background: var(--color-surface-alt);
+  background: var(--color-surface);
 }
 
 .footer__inner {
