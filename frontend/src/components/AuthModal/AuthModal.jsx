@@ -134,7 +134,6 @@ export default function AuthModal({ view, onNavigate, onClose }) {
             </span>
             <span className="auth-brand__text">
               <span className="auth-brand__name">SIVAY</span>
-              <span className="auth-brand__tagline">Розумне фермерство</span>
             </span>
           </div>
           <button type="button" className="auth-modal__close" aria-label="Закрити" onClick={onClose}>
