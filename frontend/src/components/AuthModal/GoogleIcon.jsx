@@ -6,7 +6,7 @@ export default function GoogleIcon({ size = 20 }) {
       viewBox="0 0 48 48"
       aria-hidden="true"
       focusable="false"
-      className="auth-google__logo"
+      className="shrink-0"
     >
       <path
         fill="#EA4335"
