@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import AppLink from '../AppLink/AppLink';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
-import { useNotice } from '../Notice/NoticeProvider';
+import { useAuthModal } from '../AuthModal/AuthModalProvider';
 import { NAV_LINKS } from '../../constants/siteLinks';
 import './Header.css';
 
@@ -14,7 +14,7 @@ export default function Header({ activeLink = 'home' }) {
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
   const menuRef = useRef(null);
-  const { showNotice } = useNotice();
+  const { openAuth } = useAuthModal();
 
   useEffect(() => {
     if (!isOpen) {
@@ -78,15 +78,27 @@ export default function Header({ activeLink = 'home' }) {
     toggleRef.current?.focus();
   };
 
-  const handleLogin = () => {
+ 
+  const getReturnFocusTarget = (event) =>
+    window.matchMedia(WIDE_SCREEN_QUERY).matches ? event.currentTarget : toggleRef.current;
+
+  const handleLogin = (event) => {
+    const returnFocusTo = getReturnFocusTarget(event);
     closeMenu();
-    showNotice('Вхід ще не реалізовано.');
+    openAuth('signin', returnFocusTo);
   };
 
-  const handleRegister = () => {
+  const handleRegister = (event) => {
+    const returnFocusTo = getReturnFocusTarget(event);
     closeMenu();
-    showNotice('Реєстрація ще не реалізована.');
+    openAuth('signup', returnFocusTo);
   };
+
+  const handleProfile = (event) => {
+    const returnFocusTo = getReturnFocusTarget(event);
+    closeMenu();
+    openAuth('signin', returnFocusTo);
+};
 
   return (
     <header className={`header${isOpen ? ' header--open' : ''}`}>
@@ -133,11 +145,11 @@ export default function Header({ activeLink = 'home' }) {
                 return (
                   <li key={link.id}>
                     <AppLink
-                      href={link.href}
-                      ready={link.ready}
+                      href={link.id === 'profile' ? '#' : link.href}
+                      ready={link.id === 'profile' ? true : link.ready}
                       className={`header__link${isActive ? ' header__link--active' : ''}`}
                       aria-current={isActive ? 'page' : undefined}
-                      onClick={closeMenu}
+                      onClick={link.id === 'profile' ? handleProfile : closeMenu}
                     >
                       <Icon name={link.icon} />
                       <span>{link.label}</span>
