@@ -35,7 +35,7 @@ export default function AuthField({
           id={id}
           name={name}
           type={isPassword && isVisible ? 'text' : type}
-          className="h-full flex-1 min-w-0 border-0 bg-transparent p-0 text-base text-brand-text outline-none placeholder:text-muted placeholder:opacity-100 md:text-[15px]"
+          className="h-full flex-1 min-w-0 border-0 bg-transparent p-0 text-base text-brand-text outline-none focus:outline-none focus-visible:outline-none placeholder:text-muted placeholder:opacity-100 md:text-[15px]"
           value={value}
           onChange={onChange}
           placeholder={placeholder}

@@ -123,6 +123,11 @@ p {
   outline-offset: 2px;
 }
 
+input:focus,
+input:focus-visible {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
