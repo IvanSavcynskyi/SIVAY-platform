@@ -1,0 +1,129 @@
+/**
+ * Data access for the New Analysis flow.
+ *
+ * !! This is a LOCAL ADAPTER (browser localStorage) — the repository files I received contain no
+ * backend client or endpoints for fields / seasons / crops, so nothing here talks to a server.
+ * Every function is async and returns plain data, so each one can be replaced by a fetch() call
+ * without touching the UI. The adapter enforces the season-history rules the UI relies on:
+ *   - a season's data is only ever written through that season's own year key;
+ *   - createSeason never touches existing seasons;
+ *   - the subdivision layout of a past season is locked (only crop records may be corrected).
+ */
+import { makePlot } from '../pages/NewAnalysis/lib/plots';
+
+const STORAGE_KEY = 'sivay.analysis.v1';
+const CURRENT_YEAR = new Date().getFullYear();
+
+const emptyDb = () => ({ fields: [], requests: [], cropProposals: [] });
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const uid = (prefix) => `${prefix}_${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+const fail = (code, message) => Object.assign(new Error(message), { code });
+
+function read() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? { ...emptyDb(), ...JSON.parse(raw) } : emptyDb();
+  } catch {
+    return emptyDb();
+  }
+}
+
+function write(db) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  } catch {
+    throw fail('STORAGE_FAILED', 'Не вдалося зберегти дані у браузері.');
+  }
+}
+
+function getField(db, fieldId) {
+  const field = db.fields.find((f) => f.id === fieldId);
+  if (!field) throw fail('FIELD_NOT_FOUND', 'Поле не знайдено.');
+  return field;
+}
+
+const latestYear = (field) => Math.max(...Object.keys(field.seasons).map(Number));
+const cleanPlot = (p) => ({ id: p.id, label: p.label, path: p.path, areaHa: p.areaHa, cropId: p.cropId ?? null });
+
+export async function listFields() {
+  return clone(read().fields);
+}
+
+export async function createField({ name, region, boundary, areaHa }) {
+  const db = read();
+  const field = {
+    id: uid('field'),
+    name,
+    region: region || '',
+    boundary,
+    areaHa,
+    createdAt: new Date().toISOString(),
+    seasons: {
+      [CURRENT_YEAR]: { year: CURRENT_YEAR, plots: [cleanPlot(makePlot(boundary, { label: 'A' }))], updatedAt: new Date().toISOString() },
+    },
+  };
+  db.fields.push(field);
+  write(db);
+  return clone(field);
+}
+
+/** Replaces the subdivision layout of ONE season (the latest). Other seasons are never touched. */
+export async function saveSeasonLayout(fieldId, year, plots) {
+  const db = read();
+  const field = getField(db, fieldId);
+  if (!field.seasons[year]) throw fail('SEASON_NOT_FOUND', 'Сезон не знайдено.');
+  if (year !== latestYear(field)) throw fail('SEASON_LAYOUT_LOCKED', 'Розбивку минулих сезонів змінити не можна.');
+  if (!plots.length) throw fail('NO_PLOTS', 'У сезоні має бути хоча б одна ділянка.');
+  field.seasons[year] = { ...field.seasons[year], plots: plots.map(cleanPlot), updatedAt: new Date().toISOString() };
+  write(db);
+  return clone(field);
+}
+
+/** Creates the next season. Existing seasons are left exactly as they were. */
+export async function createSeason(fieldId, { mode }) {
+  const db = read();
+  const field = getField(db, fieldId);
+  const previous = field.seasons[latestYear(field)];
+  const year = latestYear(field) + 1;
+  if (field.seasons[year]) throw fail('SEASON_EXISTS', 'Такий сезон уже існує.');
+  const plots =
+    mode === 'copy'
+      ? previous.plots.map((p) => cleanPlot({ ...makePlot(p.path, { label: p.label }), cropId: null }))
+      : [cleanPlot(makePlot(field.boundary, { label: 'A' }))];
+  field.seasons[year] = { year, plots, updatedAt: new Date().toISOString() };
+  write(db);
+  return clone(field);
+}
+
+/** Sets the crop record of one plot in one season (allowed for past seasons — corrections). */
+export async function saveCropRecord(fieldId, year, plotId, cropId) {
+  const db = read();
+  const field = getField(db, fieldId);
+  const season = field.seasons[year];
+  const plot = season?.plots.find((p) => p.id === plotId);
+  if (!plot) throw fail('PLOT_NOT_FOUND', 'Ділянку не знайдено.');
+  plot.cropId = cropId || null;
+  season.updatedAt = new Date().toISOString();
+  write(db);
+  return clone(field);
+}
+
+export async function proposeCrop(name) {
+  const db = read();
+  const proposal = { id: uid('proposal'), name, status: 'pending', createdAt: new Date().toISOString() };
+  db.cropProposals.push(proposal);
+  write(db);
+  return clone(proposal);
+}
+
+export async function listCropProposals() {
+  return clone(read().cropProposals);
+}
+
+export async function submitAnalysisRequest(payload) {
+  const db = read();
+  const request = { id: uid('analysis'), status: 'saved_locally', createdAt: new Date().toISOString(), ...payload };
+  db.requests.push(request);
+  write(db);
+  return clone(request);
+}
