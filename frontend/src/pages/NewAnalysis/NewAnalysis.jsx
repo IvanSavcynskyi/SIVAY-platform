@@ -8,7 +8,6 @@ import CropsStep from './components/CropsStep';
 import FieldStep from './components/FieldStep';
 import SeasonsStep from './components/SeasonsStep';
 
-/** "Новий аналіз" — three accordion steps: field → seasons & previous crops → crops to compare. */
 export default function NewAnalysis() {
   const [openStep, setOpenStep] = useState(1);
   const [field, setField] = useState(null);

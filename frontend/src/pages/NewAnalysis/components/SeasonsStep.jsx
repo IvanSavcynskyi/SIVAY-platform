@@ -26,11 +26,6 @@ function Legend() {
   );
 }
 
-/**
- * Step 2 — seasons, subdivisions and previous crops.
- * Rules: the field outline is permanent; each season has its own subdivisions; only the latest season's
- * layout can be edited; past seasons keep their layout (crop records can still be corrected).
- */
 export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const years = useMemo(() => Object.keys(field.seasons).map(Number).sort((a, b) => a - b), [field.seasons]);
   const latestYear = years[years.length - 1];

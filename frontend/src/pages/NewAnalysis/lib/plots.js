@@ -1,4 +1,3 @@
-// Pure rules for seasonal subdivisions ("ділянки"). A plot: { id, label, path, areaHa, cropId }.
 import { ensureCCW, isSelfIntersecting, mergePolygons, pointInPolygon, pointNearBoundary, polygonAreaHa, samePoint, splitPolygonByLine } from '../../../utils/geo';
 
 export const PLOT_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#14b8a6', '#ef4444', '#ec4899', '#84cc16', '#06b6d4', '#f97316', '#6366f1', '#a855f7', '#10b981'];
@@ -16,7 +15,6 @@ export function makePlot(path, { label = 'A', cropId = null, id = newPlotId() } 
   return { id, label, path: ring, areaHa: polygonAreaHa(ring), cropId };
 }
 
-// Cuts every plot crossed by the line. Children inherit the crop record of the plot they came from.
 export function splitPlotsByLine(plots, a, b) {
   const used = [...plots];
   const result = [];
@@ -59,7 +57,6 @@ export function removePlot(plots, id) {
   return { plots: plots.filter((p) => p.id !== id) };
 }
 
-// Moves a vertex plus every coincident vertex of neighbouring plots, so shared borders stay shared.
 export function movePlotVertex(plots, fieldBoundary, oldPt, newPt) {
   if (pointNearBoundary(oldPt, fieldBoundary)) return { error: 'Зовнішню межу поля змінювати не можна — вона постійна.' };
   if (!pointInPolygon(newPt, fieldBoundary)) return { error: 'Точка має лишатися всередині меж поля.' };

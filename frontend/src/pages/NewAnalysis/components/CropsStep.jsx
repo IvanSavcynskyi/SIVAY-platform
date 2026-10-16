@@ -6,7 +6,6 @@ import { listCropProposals, proposeCrop } from '../../../services/analysisApi';
 import { formatHa } from '../../../utils/format';
 import { INPUT_CLASS, InfoNote, LinkButton } from './ui';
 
-/** Step 3 — pick the crops to compare. Multi-select, searchable. */
 export default function CropsStep({ field, season, selectedIds, onChange, onBack, onEditSeason, onSubmit, submitting, result }) {
   const ids = useId();
   const [query, setQuery] = useState('');

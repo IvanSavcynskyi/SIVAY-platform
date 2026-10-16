@@ -11,7 +11,6 @@ import { isSelfIntersecting, parseCoordinate, pathBounds, polygonAreaHa } from '
 import { INPUT_CLASS, InfoNote, LinkButton } from './ui';
 
 const MIN_FIELD_HA = 0.05;
-// Preview-only rectangle (~25 ha near Poltava) used when no Google Maps key is configured.
 const DEMO_BOUNDARY = [
   { lat: 49.5, lng: 34.5 },
   { lat: 49.5, lng: 34.5069 },
@@ -19,11 +18,10 @@ const DEMO_BOUNDARY = [
   { lat: 49.504522, lng: 34.5 },
 ];
 
-/** Step 1 — find the place, then mark (or pick) the field. Search only moves the map; it never picks the field. */
 export default function FieldStep({ onFieldReady }) {
   const ids = useId();
-  const [tab, setTab] = useState('search'); // search | coords
-  const [mode, setMode] = useState('locate'); // locate | draw | edit | saved
+  const [tab, setTab] = useState('search');
+  const [mode, setMode] = useState('locate');
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);

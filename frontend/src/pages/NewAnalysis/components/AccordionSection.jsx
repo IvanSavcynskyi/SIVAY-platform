@@ -1,9 +1,5 @@
 import { IconCheck, IconChevronDown, IconChevronUp } from '../../../components/AnalysisIcons/AnalysisIcons';
 
-/**
- * status: 'current' (open or being worked on) | 'complete' | 'upcoming' (locked)
- * Open sections are white with a green border; collapsed completed ones are tinted green; locked ones are dashed.
- */
 export default function AccordionSection({ id, number, title, summary, status, open, onToggle, onChange, children }) {
   const locked = status === 'upcoming';
   const complete = status === 'complete';

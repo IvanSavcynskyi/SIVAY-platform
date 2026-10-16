@@ -1,4 +1,3 @@
-// Static crop catalogue. Replace with an API call when the backend exposes one.
 export const CROPS = [
   { id: 'wheat', name: 'Пшениця', group: 'Зернові' },
   { id: 'corn', name: 'Кукурудза', group: 'Зернові' },

@@ -1,4 +1,3 @@
-// Small stroke icons used by the New Analysis page and the map controls (24x24 grid, currentColor).
 function Svg({ size = 20, className = '', children }) {
   return (
     <svg
