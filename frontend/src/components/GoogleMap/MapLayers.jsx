@@ -22,7 +22,15 @@ const removeMarker = (marker) => {
   if (marker) marker.map = null;
 };
 
-const readPath = (polygon) => polygon.getPath().getArray().map((ll) => ll.toJSON());
+const readPath = (polygon) => {
+  const path = polygon?.getPath?.();
+
+  if (!path || typeof path.getArray !== 'function') {
+    return [];
+  }
+
+  return path.getArray().map((point) => point.toJSON());
+};
 
 // Rewrites the MVCArray in place so existing vertex listeners stay attached.
 function replacePath(maps, polygon, points) {
@@ -62,7 +70,7 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
   useEffect(() => {
     const polygon = new maps.Polygon({
       map,
-      paths: [],
+      paths: path ?? [],
       strokeColor: '#19c463',
       strokeWeight: 3,
       fillColor: '#19c463',

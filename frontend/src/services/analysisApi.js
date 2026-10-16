@@ -42,7 +42,17 @@ function getField(db, fieldId) {
   return field;
 }
 
-const latestYear = (field) => Math.max(...Object.keys(field.seasons).map(Number));
+const latestYear = (field) => {
+  const availableYears = Object.keys(field.seasons)
+    .map(Number)
+    .filter((year) => year <= CURRENT_YEAR);
+
+  if (availableYears.length === 0) {
+    throw fail('NO_VALID_SEASON', 'Не знайдено сезону поточного року або раніше.');
+  }
+
+  return Math.max(...availableYears);
+};
 const cleanPlot = (p) => ({ id: p.id, label: p.label, path: p.path, areaHa: p.areaHa, cropId: p.cropId ?? null });
 
 export async function listFields() {
@@ -79,18 +89,39 @@ export async function saveSeasonLayout(fieldId, year, plots) {
   return clone(field);
 }
 
-/** Creates the next season. Existing seasons are left exactly as they were. */
+/** Creates the previous available season without changing existing seasons. */
 export async function createSeason(fieldId, { mode }) {
   const db = read();
   const field = getField(db, fieldId);
-  const previous = field.seasons[latestYear(field)];
-  const year = latestYear(field) + 1;
-  if (field.seasons[year]) throw fail('SEASON_EXISTS', 'Такий сезон уже існує.');
+
+  const sourceYear = latestYear(field);
+  const sourceSeason = field.seasons[sourceYear];
+  const year = sourceYear - 1;
+
+  if (field.seasons[year]) {
+    throw fail('SEASON_EXISTS', `Сезон ${year} уже існує.`);
+  }
+
+  if (year < 1900) {
+    throw fail('INVALID_SEASON', 'Не вдалося визначити попередній сезон.');
+  }
+
   const plots =
     mode === 'copy'
-      ? previous.plots.map((p) => cleanPlot({ ...makePlot(p.path, { label: p.label }), cropId: null }))
+      ? sourceSeason.plots.map((p) =>
+          cleanPlot({
+            ...makePlot(p.path, { label: p.label }),
+            cropId: null,
+          })
+        )
       : [cleanPlot(makePlot(field.boundary, { label: 'A' }))];
-  field.seasons[year] = { year, plots, updatedAt: new Date().toISOString() };
+
+  field.seasons[year] = {
+    year,
+    plots,
+    updatedAt: new Date().toISOString(),
+  };
+
   write(db);
   return clone(field);
 }

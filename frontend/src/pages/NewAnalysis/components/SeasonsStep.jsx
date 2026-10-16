@@ -27,11 +27,26 @@ function Legend() {
 }
 
 export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
-  const years = useMemo(() => Object.keys(field.seasons).map(Number).sort((a, b) => a - b), [field.seasons]);
-  const latestYear = years[years.length - 1];
+  const currentYear = new Date().getFullYear();
 
-  const [activeYear, setActiveYear] = useState(latestYear);
-  const [mode, setMode] = useState('view'); // view | crop | edit | newSeason
+const years = useMemo(
+  () =>
+    Object.keys(field.seasons)
+      .map(Number)
+      .filter((year) => year <= currentYear)
+      .sort((a, b) => b - a),
+  [field.seasons, currentYear]
+);
+
+const latestYear = years[0];
+
+const [activeYear, setActiveYear] = useState(
+  () => latestYear
+);
+
+const canEditLayout =
+  activeYear === latestYear && activeYear <= currentYear;
+  const [mode, setMode] = useState('view'); 
   const [cropPlotId, setCropPlotId] = useState(null);
   const [cropDraft, setCropDraft] = useState('');
   const [editPlots, setEditPlots] = useState([]);
@@ -44,7 +59,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const [focus, setFocus] = useState(() => ({ bounds: pathBounds(field.boundary) }));
 
   const season = field.seasons[activeYear];
-  const isLatest = activeYear === latestYear;
+  const isLatest = canEditLayout;
   const editing = mode === 'edit';
   const plots = useMemo(() => withColors(editing ? editPlots : season.plots), [editing, editPlots, season.plots]);
   const cropPlot = plots.find((p) => p.id === cropPlotId);
@@ -166,7 +181,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
       setActiveYear(latestYear + 1);
       setMode('view');
       info(`Сезон ${latestYear + 1} створено. Попередні сезони лишилися без змін.`);
-    });
+      });
 
   const otherYears = years.filter((y) => y !== activeYear).reverse();
   const summarize = (y) => field.seasons[y].plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
@@ -196,9 +211,18 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
             ))}
           </div>
         </div>
-        <Button variant="secondary" size="sm" className="w-full md:w-auto" disabled={editing || busy} onClick={() => { setMode('newSeason'); setNotice(null); }}>
-          Новий сезон
-        </Button>
+            <Button
+                variant="secondary"
+                size="sm"
+                className="w-full md:w-auto"
+                disabled={editing || busy}
+                onClick={() => {
+                  setMode('newSeason');
+                  setNotice(null);
+                }}
+              >
+                Додати попередній сезон
+              </Button>
       </div>
 
       {editing && (
@@ -357,7 +381,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
           {mode === 'newSeason' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Новий сезон {latestYear + 1}</h3>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {latestYear - 1}</h3>
                 <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Межі ділянок кожного року окремі. Попередні сезони не зміняться.</p>
               </div>
               {[
