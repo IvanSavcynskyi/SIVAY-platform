@@ -18,7 +18,9 @@ from app.schemas.plot import PlotCreate, PlotResponse, PlotUpdate
 
 router = APIRouter()
 
+
 async def verify_field_access(db: AsyncSession, field_id: int, user_id: int):
+    """Перевіряє існування поля та належність поточному користувачу."""
     field = await get_field(db=db, field_id=field_id)
     if not field:
         raise HTTPException(status_code=404, detail="Поле не знайдено")
@@ -26,18 +28,26 @@ async def verify_field_access(db: AsyncSession, field_id: int, user_id: int):
         raise HTTPException(status_code=403, detail="Немає доступу до цього поля")
     return field
 
+
 @router.post("/", response_model=PlotResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_plot(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
+    field_id: int,
     plot_in: PlotCreate,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Any:
     """Створення ділянки у конкретному полі."""
-    await verify_field_access(db, plot_in.field_id, current_user.id)
-    return await create_plot(db=db, plot_in=plot_in)
+    await verify_field_access(db, field_id, current_user.id)
+    try:
+        return await create_plot(db=db, plot_in=plot_in, field_id=field_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        )
 
-@router.get("/by-field/{field_id}", response_model=list[PlotResponse])
+
+@router.get("/", response_model=list[PlotResponse])
 async def read_plots_by_field(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -48,45 +58,57 @@ async def read_plots_by_field(
     await verify_field_access(db, field_id, current_user.id)
     return await get_plots_by_field(db=db, field_id=field_id)
 
+
 @router.get("/{plot_id}", response_model=PlotResponse)
 async def read_plot(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
+    field_id: int,
     plot_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Any:
     """Отримання деталей ділянки за ID."""
+    await verify_field_access(db, field_id, current_user.id)
     plot = await get_plot(db=db, plot_id=plot_id)
     if not plot:
         raise HTTPException(status_code=404, detail="Ділянку не знайдено")
-    await verify_field_access(db, plot.field_id, current_user.id)
+    if plot.field_id != field_id:
+        raise HTTPException(status_code=404, detail="Ділянку не знайдено у цьому полі")
     return plot
+
 
 @router.put("/{plot_id}", response_model=PlotResponse)
 async def update_existing_plot(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
+    field_id: int,
     plot_id: int,
     plot_in: PlotUpdate,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Any:
     """Оновлення існуючої ділянки."""
+    await verify_field_access(db, field_id, current_user.id)
     plot = await get_plot(db=db, plot_id=plot_id)
     if not plot:
         raise HTTPException(status_code=404, detail="Ділянку не знайдено")
-    await verify_field_access(db, plot.field_id, current_user.id)
+    if plot.field_id != field_id:
+        raise HTTPException(status_code=404, detail="Ділянку не знайдено у цьому полі")
     return await update_plot(db=db, db_obj=plot, obj_in=plot_in)
+
 
 @router.delete("/{plot_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_existing_plot(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
+    field_id: int,
     plot_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Видалення ділянки."""
+    await verify_field_access(db, field_id, current_user.id)
     plot = await get_plot(db=db, plot_id=plot_id)
     if not plot:
         raise HTTPException(status_code=404, detail="Ділянку не знайдено")
-    await verify_field_access(db, plot.field_id, current_user.id)
+    if plot.field_id != field_id:
+        raise HTTPException(status_code=404, detail="Ділянку не знайдено у цьому полі")
     await delete_plot(db=db, id=plot_id)
