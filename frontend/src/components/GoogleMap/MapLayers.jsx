@@ -1,4 +1,3 @@
-// Overlay components rendered inside <GoogleMapView>. They talk to the map imperatively and clean up after themselves.
 import { useEffect, useRef } from 'react';
 import { pathsEqual, polygonCentroid } from '../../utils/geo';
 import { useMap } from './mapContext';
@@ -32,31 +31,28 @@ const readPath = (polygon) => {
   return path.getArray().map((point) => point.toJSON());
 };
 
-// Rewrites the MVCArray in place so existing vertex listeners stay attached.
 function replacePath(maps, polygon, points) {
   const arr = polygon.getPath();
   arr.clear();
   points.forEach((pt) => arr.push(new maps.LatLng(pt.lat, pt.lng)));
 }
 
-/** Green pin with a label — "you are here" for a searched place or coordinates. */
 export function LocationMarker({ position, label }) {
   const { map, maps } = useMap();
   useEffect(() => {
     if (!position) return undefined;
     const content = el('div', 'flex flex-col items-center gap-1.5');
     const pin = el('div', 'grid h-11 w-11 place-items-center rounded-full border-[3px] border-white bg-brand shadow-[0_3px_5px_rgba(8,46,32,0.3)]');
-    pin.innerHTML = PIN_SVG; // static markup, no user data
+    pin.innerHTML = PIN_SVG;
     content.appendChild(pin);
     if (label) content.appendChild(el('div', 'max-w-[220px] truncate rounded-[10px] bg-white px-3 py-1.5 text-[13px] font-bold text-brand-text shadow-[0_3px_5px_rgba(8,46,32,0.15)]', label));
-    content.style.transform = 'translateY(calc(100% - 22px))'; // pin centre sits on the coordinate
+    content.style.transform = 'translateY(calc(100% - 22px))';
     const marker = addMarker(maps, map, { position, content });
     return () => removeMarker(marker);
   }, [map, maps, position, label]);
   return null;
 }
 
-/** The field outline. Optionally editable (step 1) and with corner dots (step 2). */
 export function FieldBoundaryLayer({ path, editable = false, showVertices = false, onChange }) {
   const { map, maps } = useMap();
   const polygonRef = useRef(null);
@@ -115,10 +111,6 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
   return null;
 }
 
-/**
- * Season subdivisions: filled polygons + letter badges.
- * onVertexMove(oldPt, newPt) must return true to accept a dragged vertex, false to snap it back.
- */
 export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, editable = false, onPlotClick, onVertexMove, onStructureChange }) {
   const { map, maps } = useMap();
   const entries = useRef(new Map());
@@ -231,7 +223,6 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
   return null;
 }
 
-/** Click-to-add-corners drawing (works with taps). Click the first dot to close the outline. */
 export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
   const { map, maps } = useMap();
   const handlers = useRef({});
@@ -284,7 +275,6 @@ export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
   return null;
 }
 
-/** Two clicks define a cutting line; onComplete(a, b) fires after the second. */
 export function DrawLineLayer({ onComplete }) {
   const { map, maps } = useMap();
   const handler = useRef(onComplete);

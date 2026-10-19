@@ -122,7 +122,7 @@ export default function Header({ activeLink = 'home' }) {
           <Icon name="menu" size={24} />
         </button>
 
-        {/* Backdrop for mobile drawer */}
+        {}
         <div
           className={`fixed inset-0 z-[90] bg-[rgba(16,26,36,0.45)] transition-[opacity,visibility] duration-250 ease-out md:hidden ${
             isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0'
@@ -131,7 +131,7 @@ export default function Header({ activeLink = 'home' }) {
           aria-hidden="true"
         />
 
-        {/* Menu (drawer on mobile, contents on desktop) */}
+        {}
         <div
           id="site-menu"
           ref={menuRef}

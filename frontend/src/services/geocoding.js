@@ -1,9 +1,5 @@
 import { loadGoogleMaps } from '../components/GoogleMap/loadGoogleMaps';
 
-/**
- * Place search for the "Пошук місця" tab. Uses the Maps JS Geocoder (needs the Geocoding API enabled),
- * restricted to Ukraine. It only moves the map — it never decides where the field is.
- */
 export async function geocodePlace(query) {
   const maps = await loadGoogleMaps();
   const { Geocoder } = await maps.importLibrary('geocoding');

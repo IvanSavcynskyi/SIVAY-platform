@@ -1,7 +1,6 @@
-// Pure geometry helpers (no Google Maps dependency). Paths are arrays of { lat, lng }.
 const M_PER_DEG_LAT = 110540;
 const M_PER_DEG_LNG = 111320;
-const SAME_POINT_EPS = 1e-7; // ~1 cm
+const SAME_POINT_EPS = 1e-7;
 
 export function samePoint(a, b) {
   return Math.abs(a.lat - b.lat) < SAME_POINT_EPS && Math.abs(a.lng - b.lng) < SAME_POINT_EPS;
@@ -12,7 +11,6 @@ export function pathsEqual(a, b) {
   return a.every((p, i) => samePoint(p, b[i]));
 }
 
-// Local equirectangular projection to metres — accurate enough for field-sized polygons.
 export function makeProjector(points) {
   const n = points.length || 1;
   const lat0 = points.reduce((s, p) => s + p.lat, 0) / n;
@@ -80,7 +78,6 @@ export function pointInPolygon(pt, path) {
   return inside;
 }
 
-// True when `pt` lies on (within tolMeters of) the polygon outline.
 export function pointNearBoundary(pt, path, tolMeters = 0.75) {
   const { toXY } = makeProjector(path);
   const p = toXY(pt);
@@ -123,11 +120,6 @@ export function isSelfIntersecting(path) {
   return false;
 }
 
-/**
- * Splits a simple polygon with the infinite line through a and b.
- * Returns [ringA, ringB] or null when the line does not cross the polygon exactly twice
- * (it misses it, or cuts a strongly concave shape in more than two places).
- */
 export function splitPolygonByLine(path, a, b) {
   const { toXY, toLL } = makeProjector(path);
   const pts = path.map(toXY);
@@ -170,7 +162,6 @@ export function splitPolygonByLine(path, a, b) {
   return out;
 }
 
-/** Merges two polygons that share an edge. Returns the merged ring or null. */
 export function mergePolygons(pa, pb) {
   const a = ensureCCW(pa);
   const b = ensureCCW(pb);

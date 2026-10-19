@@ -1,14 +1,3 @@
-/**
- * Data access for the New Analysis flow.
- *
- * !! This is a LOCAL ADAPTER (browser localStorage) — the repository files I received contain no
- * backend client or endpoints for fields / seasons / crops, so nothing here talks to a server.
- * Every function is async and returns plain data, so each one can be replaced by a fetch() call
- * without touching the UI. The adapter enforces the season-history rules the UI relies on:
- *   - a season's data is only ever written through that season's own year key;
- *   - createSeason never touches existing seasons;
- *   - the subdivision layout of a past season is locked (only crop records may be corrected).
- */
 import { makePlot } from '../pages/NewAnalysis/lib/plots';
 
 const STORAGE_KEY = 'sivay.analysis.v1';
@@ -77,7 +66,6 @@ export async function createField({ name, region, boundary, areaHa }) {
   return clone(field);
 }
 
-/** Replaces the subdivision layout of ONE season (the latest). Other seasons are never touched. */
 export async function saveSeasonLayout(fieldId, year, plots) {
   const db = read();
   const field = getField(db, fieldId);
@@ -89,7 +77,6 @@ export async function saveSeasonLayout(fieldId, year, plots) {
   return clone(field);
 }
 
-/** Creates the previous available season without changing existing seasons. */
 export async function createSeason(fieldId, { mode }) {
   const db = read();
   const field = getField(db, fieldId);
@@ -126,7 +113,6 @@ export async function createSeason(fieldId, { mode }) {
   return clone(field);
 }
 
-/** Sets the crop record of one plot in one season (allowed for past seasons — corrections). */
 export async function saveCropRecord(fieldId, year, plotId, cropId) {
   const db = read();
   const field = getField(db, fieldId);

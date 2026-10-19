@@ -1,6 +1,4 @@
-// Loads the Google Maps JavaScript API once, using the key from Vite env (never hard-coded).
 export const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-// AdvancedMarkerElement needs a Map ID. DEMO_MAP_ID works for development only.
 export const GOOGLE_MAPS_MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
 
 export const isMapsConfigured = () => Boolean(GOOGLE_MAPS_KEY);
@@ -10,7 +8,6 @@ let authFailed = false;
 const authListeners = new Set();
 
 if (typeof window !== 'undefined') {
-  // Google calls this global when the key is invalid, restricted or billing is off.
   window.gm_authFailure = () => {
     authFailed = true;
     authListeners.forEach((fn) => fn());

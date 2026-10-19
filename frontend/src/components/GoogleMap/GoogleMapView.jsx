@@ -21,10 +21,6 @@ const PROBLEMS = {
 const UKRAINE = { lat: 49.0, lng: 31.5 };
 const controlBtn = 'grid h-11 w-11 cursor-pointer place-items-center text-brand-text transition-colors hover:bg-brand-tint md:h-[38px] md:w-[38px]';
 
-/**
- * Interactive Google map. Children (see MapLayers.jsx) render only once the map exists and read it via useMap().
- * `focus`: { bounds } | { center, zoom } — pass a NEW object each time you want the map to move.
- */
 export default function GoogleMapView({ focus, badge, legend, className = '', children, ariaLabel = 'Інтерактивна карта' }) {
   const containerRef = useRef(null);
   const [ctx, setCtx] = useState(null);
