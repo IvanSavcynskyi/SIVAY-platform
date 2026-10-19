@@ -1,7 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import AuthModal from './AuthModal';
-
-const AuthModalContext = createContext({ openAuth: () => {}, closeAuth: () => {} });
+import { AuthModalContext } from './AuthModalContext';
 
 export function AuthModalProvider({ children }) {
   const [view, setView] = useState(null);
@@ -39,6 +38,4 @@ export function AuthModalProvider({ children }) {
   );
 }
 
-export function useAuthModal() {
-  return useContext(AuthModalContext);
-}
+export default AuthModalProvider;
