@@ -29,24 +29,28 @@ function Legend() {
 export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const currentYear = new Date().getFullYear();
 
-const years = useMemo(
-  () =>
-    Object.keys(field.seasons)
+  const fieldSeasons = field?.seasons;
+  const years = useMemo(() => {
+    if (!fieldSeasons || typeof fieldSeasons !== 'object') return [];
+    return Object.keys(fieldSeasons)
       .map(Number)
-      .filter((year) => year <= currentYear)
-      .sort((a, b) => b - a),
-  [field.seasons, currentYear]
-);
+      .filter((year) => Number.isFinite(year) && year <= currentYear)
+      .sort((a, b) => b - a);
+  }, [fieldSeasons, currentYear]);
 
-const latestYear = years[0];
+  const latestYear = years[0] ?? currentYear;
+  const earliestYear = years.length > 0 ? years[years.length - 1] : currentYear;
 
-const [activeYear, setActiveYear] = useState(
-  () => latestYear
-);
+  const [activeYear, setActiveYear] = useState(() => latestYear);
 
-const canEditLayout =
-  activeYear === latestYear && activeYear <= currentYear;
-  const [mode, setMode] = useState('view'); 
+  const effectiveYear =
+    field?.seasons && activeYear in field.seasons
+      ? activeYear
+      : (latestYear in (field?.seasons || {}) ? latestYear : years[0]);
+
+  const season = field?.seasons?.[effectiveYear] || null;
+  const canEditLayout = Boolean(season);
+  const [mode, setMode] = useState('view');
   const [cropPlotId, setCropPlotId] = useState(null);
   const [cropDraft, setCropDraft] = useState('');
   const [editPlots, setEditPlots] = useState([]);
@@ -56,12 +60,20 @@ const canEditLayout =
   const [newSeasonMode, setNewSeasonMode] = useState('copy');
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [focus, setFocus] = useState(() => ({ bounds: pathBounds(field.boundary) }));
+  const [focus, setFocus] = useState(() => {
+    const bounds = pathBounds(field?.boundary);
+    return bounds ? { bounds } : null;
+  });
 
-  const season = field.seasons[activeYear];
-  const isLatest = canEditLayout;
   const editing = mode === 'edit';
-  const plots = useMemo(() => withColors(editing ? editPlots : season.plots), [editing, editPlots, season.plots]);
+  const seasonPlots = useMemo(
+    () => (Array.isArray(season?.plots) ? season.plots.filter(Boolean) : []),
+    [season]
+  );
+  const plots = useMemo(
+    () => withColors(editing ? editPlots : seasonPlots),
+    [editing, editPlots, seasonPlots]
+  );
   const cropPlot = plots.find((p) => p.id === cropPlotId);
 
   const setEdit = (next) => {
@@ -85,11 +97,14 @@ const canEditLayout =
     setActiveYear(year);
     setMode('view');
     setNotice(null);
-    setFocus({ bounds: pathBounds(field.boundary) });
+    const bounds = pathBounds(field?.boundary);
+    if (bounds) {
+      setFocus({ bounds });
+    }
   };
 
   const openCrop = (plotId) => {
-    const plot = season.plots.find((p) => p.id === plotId);
+    const plot = seasonPlots.find((p) => p.id === plotId);
     if (!plot) return;
     setCropPlotId(plotId);
     setCropDraft(plot.cropId ?? '');
@@ -99,13 +114,13 @@ const canEditLayout =
 
   const saveCrop = () =>
     run(async () => {
-      onFieldChange(await saveCropRecord(field.id, activeYear, cropPlotId, cropDraft || null));
+      onFieldChange(await saveCropRecord(field.id, effectiveYear, cropPlotId, cropDraft || null));
       setMode('view');
-      info(`Запис культури для ділянки ${cropPlot.label} збережено.`);
+      info(`Запис культури для ділянки ${cropPlot?.label || ''} збережено.`);
     });
 
   const startEdit = () => {
-    setEdit(season.plots.map((p) => ({ ...p })));
+    setEdit(seasonPlots.map((p) => ({ ...p })));
     setTool('split');
     setMergeSel(NO_IDS);
     setMode('edit');
@@ -114,9 +129,9 @@ const canEditLayout =
 
   const confirmEdit = () =>
     run(async () => {
-      onFieldChange(await saveSeasonLayout(field.id, activeYear, editPlotsRef.current));
+      onFieldChange(await saveSeasonLayout(field.id, effectiveYear, editPlotsRef.current));
       setMode('view');
-      info(`Розбивку сезону ${activeYear} збережено. Інші сезони не змінено.`);
+      info(`Розбивку сезону ${effectiveYear} збережено. Інші сезони не змінено.`);
     });
 
   const pickTool = (next) => {
@@ -132,9 +147,13 @@ const canEditLayout =
   };
 
   const handleSplit = (a, b) => {
+    if (editPlotsRef.current.length >= MAX_PLOTS) {
+      error(`Максимум ${MAX_PLOTS} ділянок.`);
+      return;
+    }
     const result = splitPlotsByLine(editPlotsRef.current, a, b);
     if (result.splitCount === 0) {
-      error(editPlotsRef.current.length >= MAX_PLOTS ? `Максимум ${MAX_PLOTS} ділянок.` : 'Лінія не розділила жодної ділянки. Проведіть її через поле.');
+      error('Лінія не розділила жодної ділянки. Проведіть її через поле.');
       return;
     }
     setEdit(result.plots);
@@ -176,15 +195,20 @@ const canEditLayout =
 
   const handleNewSeason = () =>
     run(async () => {
-      const updated = await createSeason(field.id, { mode: newSeasonMode });
+      const targetYear = earliestYear - 1;
+      const updated = await createSeason(field.id, { mode: newSeasonMode, year: targetYear });
       onFieldChange(updated);
-      setActiveYear(latestYear + 1);
+      setActiveYear(targetYear);
       setMode('view');
-      info(`Сезон ${latestYear + 1} створено. Попередні сезони лишилися без змін.`);
-      });
+      info(`Сезон ${targetYear} створено. Попередні сезони лишилися без змін.`);
+    });
 
-  const otherYears = years.filter((y) => y !== activeYear).reverse();
-  const summarize = (y) => field.seasons[y].plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
+  const otherYears = years.filter((y) => y !== effectiveYear).reverse();
+  const summarize = (y) => {
+    const s = field?.seasons?.[y];
+    if (!s || !Array.isArray(s.plots)) return '—';
+    return s.plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
+  };
   const selectedIds = mode === 'crop' && cropPlotId ? [cropPlotId] : editing && tool === 'merge' ? mergeSel : NO_IDS;
   const interactive = mode === 'view' || mode === 'crop' || (editing && (tool === 'merge' || tool === 'delete'));
 
@@ -199,11 +223,11 @@ const canEditLayout =
                 key={y}
                 type="button"
                 role="tab"
-                aria-selected={y === activeYear}
+                aria-selected={y === effectiveYear}
                 disabled={editing}
                 onClick={() => selectYear(y)}
                 className={`h-10 flex-1 cursor-pointer rounded-[10px] px-4 text-[15px] disabled:cursor-not-allowed md:flex-none ${
-                  y === activeYear ? 'border border-[#bbf7d0] bg-brand-tint font-bold text-brand-dark' : 'border border-transparent font-semibold text-muted'
+                  y === effectiveYear ? 'border border-[#bbf7d0] bg-brand-tint font-bold text-brand-dark' : 'border border-transparent font-semibold text-muted'
                 }`}
               >
                 {y}
@@ -211,18 +235,18 @@ const canEditLayout =
             ))}
           </div>
         </div>
-            <Button
-                variant="secondary"
-                size="sm"
-                className="w-full md:w-auto"
-                disabled={editing || busy}
-                onClick={() => {
-                  setMode('newSeason');
-                  setNotice(null);
-                }}
-              >
-                Додати попередній сезон
-              </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="w-full md:w-auto"
+          disabled={editing || busy}
+          onClick={() => {
+            setMode('newSeason');
+            setNotice(null);
+          }}
+        >
+          Додати попередній сезон
+        </Button>
       </div>
 
       {editing && (
@@ -239,7 +263,7 @@ const canEditLayout =
           focus={focus}
           badge={editing ? 'Межа поля — незмінна' : 'Межа поля — постійна'}
           legend={<Legend />}
-          ariaLabel={`Карта ділянок сезону ${activeYear}`}
+          ariaLabel={`Карта ділянок сезону ${effectiveYear}`}
         >
           <FieldBoundaryLayer path={field.boundary} showVertices />
           <PlotsLayer
@@ -258,7 +282,7 @@ const canEditLayout =
           {mode === 'view' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Ділянки сезону {activeYear}</h3>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Ділянки сезону {effectiveYear}</h3>
                 <p className="m-0 mt-0.5 text-[14px] text-muted">{plots.length} {plotsWord(plots.length)} · {formatHa(totalAreaHa(plots))}</p>
               </div>
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -276,18 +300,13 @@ const canEditLayout =
               <InfoNote tone="success">
                 <strong>Межі ділянок — окремо для кожного року</strong>
                 <br />
-                <span className="text-muted">Однакові літери в різні роки — різні території. Історичні розбивки не змінюються.</span>
+                <span className="text-muted">Однакові літери в різні роки — різні території. Історичні розбивки не змінюються автоматично.</span>
               </InfoNote>
-              {isLatest ? (
+              {canEditLayout && (
                 <div className="flex flex-col gap-2.5">
                   <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку</Button>
-                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(activeYear)}>Далі: культури сезону {activeYear}</Button>
+                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>Далі: культури сезону {effectiveYear}</Button>
                 </div>
-              ) : (
-                <>
-                  <p className="m-0 text-[13px] leading-[1.5] text-muted">Розбивка {activeYear} доступна лише для перегляду, щоб не змінити історію. Записи культур можна виправити через «Змінити».</p>
-                  <Button variant="secondary" size="sm" className="w-full" onClick={() => selectYear(latestYear)}>До поточного сезону {latestYear}</Button>
-                </>
               )}
             </>
           )}
@@ -295,11 +314,11 @@ const canEditLayout =
           {mode === 'crop' && cropPlot && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Культура ділянки {cropPlot.label} · {activeYear}</h3>
-                <p className="m-0 mt-0.5 text-[14px] text-muted">{formatHa(cropPlot.areaHa)} · запис належить сезону {activeYear} та цій ділянці.</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Культура ділянки {cropPlot.label} · {effectiveYear}</h3>
+                <p className="m-0 mt-0.5 text-[14px] text-muted">{formatHa(cropPlot.areaHa)} · запис належить сезону {effectiveYear} та цій ділянці.</p>
               </div>
               <div className="flex flex-col gap-2">
-                <label htmlFor="crop-select" className="text-[13px] font-semibold text-brand-text">Культура, що росла в сезоні {activeYear}</label>
+                <label htmlFor="crop-select" className="text-[13px] font-semibold text-brand-text">Культура, що росла в сезоні {effectiveYear}</label>
                 <select id="crop-select" className={INPUT_CLASS} value={cropDraft} onChange={(e) => setCropDraft(e.target.value)}>
                   <option value="">Не вказано</option>
                   {CROPS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -320,7 +339,7 @@ const canEditLayout =
                   {otherYears.map((y) => (
                     <div key={y} className="flex items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2.5">
                       <div className="min-w-0 flex-1">
-                        <div className="text-[14px] font-bold text-brand-text">{y} · {field.seasons[y].plots.length} {plotsWord(field.seasons[y].plots.length)}</div>
+                        <div className="text-[14px] font-bold text-brand-text">{y} · {field?.seasons?.[y]?.plots?.length || 0} {plotsWord(field?.seasons?.[y]?.plots?.length || 0)}</div>
                         <div className="truncate text-[13px] text-muted">{summarize(y)}</div>
                       </div>
                       <button type="button" className="min-h-10 cursor-pointer px-1 text-[13px] font-bold text-brand-dark hover:underline" onClick={() => selectYear(y)}>Переглянути</button>
@@ -335,8 +354,8 @@ const canEditLayout =
           {editing && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Редагування розбивки · {activeYear}</h3>
-                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Зміни стосуються лише сезону {activeYear}.</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Редагування розбивки · {effectiveYear}</h3>
+                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Зміни стосуються лише сезону {effectiveYear}.</p>
               </div>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {plots.map((p) => (
@@ -381,11 +400,11 @@ const canEditLayout =
           {mode === 'newSeason' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {latestYear - 1}</h3>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {earliestYear - 1}</h3>
                 <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Межі ділянок кожного року окремі. Попередні сезони не зміняться.</p>
               </div>
               {[
-                ['copy', `Скопіювати розбивку ${latestYear}`, 'Ті самі ділянки, але без записів культур — далі їх можна змінити.'],
+                ['copy', `Скопіювати розбивку найближчого сезону (${earliestYear})`, 'Ті самі ділянки, але без записів культур — далі їх можна змінити.'],
                 ['single', 'Одне поле без розбивки', 'Весь контур поля як одна ділянка.'],
               ].map(([id, title, text]) => (
                 <label key={id} className={`flex min-h-[64px] cursor-pointer items-start gap-3 rounded-[14px] border p-3.5 ${newSeasonMode === id ? 'border-brand bg-brand-tint' : 'border-border-main bg-white'}`}>

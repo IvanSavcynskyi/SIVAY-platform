@@ -1,4 +1,4 @@
-import { makePlot } from '../pages/NewAnalysis/lib/plots';
+import { makePlot } from '../pages/NewAnalysis/lib/plots.js';
 
 const STORAGE_KEY = 'sivay.analysis.v1';
 const CURRENT_YEAR = new Date().getFullYear();
@@ -8,10 +8,64 @@ const clone = (v) => JSON.parse(JSON.stringify(v));
 const uid = (prefix) => `${prefix}_${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
+const cleanPlot = (p) => ({
+  id: p.id,
+  label: p.label || 'A',
+  path: Array.isArray(p.path) ? p.path : [],
+  areaHa: Number.isFinite(p.areaHa) ? p.areaHa : 0,
+  cropId: p.cropId ?? null,
+});
+
+function normalizeField(field) {
+  if (!field || typeof field !== 'object') return null;
+  const boundary = Array.isArray(field.boundary)
+    ? field.boundary.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+    : [];
+
+  const seasons = {};
+  if (field.seasons && typeof field.seasons === 'object') {
+    for (const [y, s] of Object.entries(field.seasons)) {
+      const year = Number(y);
+      if (Number.isFinite(year) && s && typeof s === 'object') {
+        const rawPlots = Array.isArray(s.plots) ? s.plots : [];
+        const plots = rawPlots.filter((p) => p && Array.isArray(p.path)).map(cleanPlot);
+        seasons[year] = {
+          year,
+          plots: plots.length > 0 ? plots : [cleanPlot(makePlot(boundary, { label: 'A' }))],
+          updatedAt: s.updatedAt || new Date().toISOString(),
+        };
+      }
+    }
+  }
+
+  const seasonYears = Object.keys(seasons);
+  if (seasonYears.length === 0 && boundary.length >= 3) {
+    seasons[CURRENT_YEAR] = {
+      year: CURRENT_YEAR,
+      plots: [cleanPlot(makePlot(boundary, { label: 'A' }))],
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    ...field,
+    boundary,
+    seasons,
+  };
+}
+
 function read() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...emptyDb(), ...JSON.parse(raw) } : emptyDb();
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const db = raw ? { ...emptyDb(), ...JSON.parse(raw) } : emptyDb();
+    if (Array.isArray(db.fields)) {
+      db.fields = db.fields.map(normalizeField).filter(Boolean);
+    } else {
+      db.fields = [];
+    }
+    if (!Array.isArray(db.requests)) db.requests = [];
+    if (!Array.isArray(db.cropProposals)) db.cropProposals = [];
+    return db;
   } catch {
     return emptyDb();
   }
@@ -19,7 +73,9 @@ function read() {
 
 function write(db) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
   } catch {
     throw fail('STORAGE_FAILED', 'Не вдалося зберегти дані у браузері.');
   }
@@ -31,10 +87,13 @@ function getField(db, fieldId) {
   return field;
 }
 
-const latestYear = (field) => {
+export const latestYear = (field) => {
+  if (!field?.seasons || typeof field.seasons !== 'object') {
+    throw fail('NO_VALID_SEASON', 'Не знайдено сезонів для цього поля.');
+  }
   const availableYears = Object.keys(field.seasons)
     .map(Number)
-    .filter((year) => year <= CURRENT_YEAR);
+    .filter((year) => Number.isFinite(year) && year <= CURRENT_YEAR);
 
   if (availableYears.length === 0) {
     throw fail('NO_VALID_SEASON', 'Не знайдено сезону поточного року або раніше.');
@@ -42,7 +101,6 @@ const latestYear = (field) => {
 
   return Math.max(...availableYears);
 };
-const cleanPlot = (p) => ({ id: p.id, label: p.label, path: p.path, areaHa: p.areaHa, cropId: p.cropId ?? null });
 
 export async function listFields() {
   return clone(read().fields);
@@ -50,15 +108,23 @@ export async function listFields() {
 
 export async function createField({ name, region, boundary, areaHa }) {
   const db = read();
+  const validBoundary = Array.isArray(boundary)
+    ? boundary.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+    : [];
+
   const field = {
     id: uid('field'),
-    name,
+    name: name || 'Поле',
     region: region || '',
-    boundary,
-    areaHa,
+    boundary: validBoundary,
+    areaHa: Number.isFinite(areaHa) ? areaHa : 0,
     createdAt: new Date().toISOString(),
     seasons: {
-      [CURRENT_YEAR]: { year: CURRENT_YEAR, plots: [cleanPlot(makePlot(boundary, { label: 'A' }))], updatedAt: new Date().toISOString() },
+      [CURRENT_YEAR]: {
+        year: CURRENT_YEAR,
+        plots: [cleanPlot(makePlot(validBoundary, { label: 'A' }))],
+        updatedAt: new Date().toISOString(),
+      },
     },
   };
   db.fields.push(field);
@@ -69,32 +135,44 @@ export async function createField({ name, region, boundary, areaHa }) {
 export async function saveSeasonLayout(fieldId, year, plots) {
   const db = read();
   const field = getField(db, fieldId);
-  if (!field.seasons[year]) throw fail('SEASON_NOT_FOUND', 'Сезон не знайдено.');
-  if (year !== latestYear(field)) throw fail('SEASON_LAYOUT_LOCKED', 'Розбивку минулих сезонів змінити не можна.');
-  if (!plots.length) throw fail('NO_PLOTS', 'У сезоні має бути хоча б одна ділянка.');
-  field.seasons[year] = { ...field.seasons[year], plots: plots.map(cleanPlot), updatedAt: new Date().toISOString() };
+  const numericYear = Number(year);
+  if (!field.seasons || !field.seasons[numericYear]) {
+    throw fail('SEASON_NOT_FOUND', 'Сезон не знайдено.');
+  }
+  if (!Array.isArray(plots) || !plots.length) {
+    throw fail('NO_PLOTS', 'У сезоні має бути хоча б одна ділянка.');
+  }
+  field.seasons[numericYear] = {
+    ...field.seasons[numericYear],
+    plots: plots.map(cleanPlot),
+    updatedAt: new Date().toISOString(),
+  };
   write(db);
   return clone(field);
 }
 
-export async function createSeason(fieldId, { mode }) {
+export async function createSeason(fieldId, { mode = 'copy', year: explicitYear } = {}) {
   const db = read();
   const field = getField(db, fieldId);
 
-  const sourceYear = latestYear(field);
-  const sourceSeason = field.seasons[sourceYear];
-  const year = sourceYear - 1;
+  const existingYears = Object.keys(field.seasons || {})
+    .map(Number)
+    .filter((y) => Number.isFinite(y));
 
-  if (field.seasons[year]) {
-    throw fail('SEASON_EXISTS', `Сезон ${year} уже існує.`);
+  const minYear = existingYears.length > 0 ? Math.min(...existingYears) : CURRENT_YEAR;
+  const targetYear = explicitYear != null ? Number(explicitYear) : minYear - 1;
+
+  if (!Number.isFinite(targetYear) || targetYear < 1900 || targetYear > CURRENT_YEAR) {
+    throw fail('INVALID_SEASON', 'Некоректний рік для створення сезону.');
   }
 
-  if (year < 1900) {
-    throw fail('INVALID_SEASON', 'Не вдалося визначити попередній сезон.');
+  if (field.seasons[targetYear]) {
+    throw fail('SEASON_EXISTS', `Сезон ${targetYear} уже існує.`);
   }
 
+  const sourceSeason = field.seasons[minYear] || Object.values(field.seasons)[0];
   const plots =
-    mode === 'copy'
+    mode === 'copy' && sourceSeason && Array.isArray(sourceSeason.plots) && sourceSeason.plots.length > 0
       ? sourceSeason.plots.map((p) =>
           cleanPlot({
             ...makePlot(p.path, { label: p.label }),
@@ -103,8 +181,8 @@ export async function createSeason(fieldId, { mode }) {
         )
       : [cleanPlot(makePlot(field.boundary, { label: 'A' }))];
 
-  field.seasons[year] = {
-    year,
+  field.seasons[targetYear] = {
+    year: targetYear,
     plots,
     updatedAt: new Date().toISOString(),
   };
@@ -116,8 +194,10 @@ export async function createSeason(fieldId, { mode }) {
 export async function saveCropRecord(fieldId, year, plotId, cropId) {
   const db = read();
   const field = getField(db, fieldId);
-  const season = field.seasons[year];
-  const plot = season?.plots.find((p) => p.id === plotId);
+  const numericYear = Number(year);
+  const season = field.seasons?.[numericYear];
+  if (!season) throw fail('SEASON_NOT_FOUND', 'Сезон не знайдено.');
+  const plot = season.plots?.find((p) => p.id === plotId);
   if (!plot) throw fail('PLOT_NOT_FOUND', 'Ділянку не знайдено.');
   plot.cropId = cropId || null;
   season.updatedAt = new Date().toISOString();

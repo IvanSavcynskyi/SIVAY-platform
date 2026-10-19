@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getCropName } from '../../constants/crops';
+import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import { submitAnalysisRequest } from '../../services/analysisApi';
 import { formatHa, plotsWord } from '../../utils/format';
 import { totalAreaHa } from './lib/plots';
@@ -17,7 +18,8 @@ export default function NewAnalysis() {
   const [result, setResult] = useState(null);
   const [submitError, setSubmitError] = useState('');
 
-  const season = field && seasonYear ? field.seasons[seasonYear] : null;
+  const season = field?.seasons && seasonYear ? field.seasons[seasonYear] : null;
+  const seasonPlots = Array.isArray(season?.plots) ? season.plots.filter(Boolean) : [];
   const done = { 1: Boolean(field), 2: Boolean(season), 3: Boolean(result) };
   const canOpen = { 1: true, 2: Boolean(field), 3: Boolean(season) };
 
@@ -48,6 +50,7 @@ export default function NewAnalysis() {
   };
 
   const handleSubmit = async () => {
+    if (!field || !season) return;
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -55,7 +58,7 @@ export default function NewAnalysis() {
         await submitAnalysisRequest({
           fieldId: field.id,
           season: season.year,
-          plots: season.plots.map((p) => ({ id: p.id, label: p.label, areaHa: p.areaHa, cropId: p.cropId })),
+          plots: seasonPlots.map((p) => ({ id: p.id, label: p.label, areaHa: p.areaHa, cropId: p.cropId })),
           candidateCropIds: selectedCrops,
         }),
       );
@@ -67,7 +70,7 @@ export default function NewAnalysis() {
   };
 
   const step2Summary = season
-    ? `Сезон ${season.year} · ${season.plots.length} ${plotsWord(season.plots.length)} · ${formatHa(totalAreaHa(season.plots))} · ${season.plots
+    ? `Сезон ${season.year} · ${seasonPlots.length} ${plotsWord(seasonPlots.length)} · ${formatHa(totalAreaHa(seasonPlots))} · ${seasonPlots
         .map((p) => `${p.label} — ${getCropName(p.cropId) ?? 'не вказано'}`)
         .join(', ')}`
     : 'Сезони, поділ поля на ділянки та культури, що на них росли.';
@@ -92,7 +95,9 @@ export default function NewAnalysis() {
               : 'Знайдіть населений пункт на карті — це лише переміщення до місця. Далі позначте межі свого поля.'
           }
         >
-          <FieldStep onFieldReady={handleFieldReady} />
+          <ErrorBoundary title="Помилка при виборі поля" message="Не вдалося відобразити карту або вибір поля. Спробуйте оновити сторінку.">
+            <FieldStep onFieldReady={handleFieldReady} />
+          </ErrorBoundary>
         </AccordionSection>
 
         <AccordionSection
@@ -100,7 +105,9 @@ export default function NewAnalysis() {
           title="Ділянки та попередні культури"
           summary={step2Summary}
         >
-          {field && <SeasonsStep key={field.id} field={field} onFieldChange={setField} onConfirm={handleSeasonConfirm} />}
+          <ErrorBoundary title="Помилка при налаштуванні сезонів" message="Не вдалося відобразити ділянки цього сезону.">
+            {field && <SeasonsStep key={field.id} field={field} onFieldChange={setField} onConfirm={handleSeasonConfirm} />}
+          </ErrorBoundary>
         </AccordionSection>
 
         <AccordionSection
@@ -112,23 +119,25 @@ export default function NewAnalysis() {
               : 'Оберіть культури, які SIVAY порівняє для цього поля та сезону. Можна вибрати кілька.'
           }
         >
-          {season && (
-            <CropsStep
-              field={field}
-              season={season}
-              selectedIds={selectedCrops}
-              onChange={(ids) => {
-                setSelectedCrops(ids);
-                setResult(null);
-              }}
-              onBack={() => setOpenStep(2)}
-              onEditSeason={() => setOpenStep(2)}
-              onSubmit={handleSubmit}
-              submitting={submitting}
-              result={result}
-            />
-          )}
-          {submitError && <p className="m-0 mt-3 text-[14px] text-danger" role="alert">{submitError}</p>}
+          <ErrorBoundary title="Помилка при виборі культур" message="Не вдалося завантажити перелік культур.">
+            {season && (
+              <CropsStep
+                field={field}
+                season={season}
+                selectedIds={selectedCrops}
+                onChange={(ids) => {
+                  setSelectedCrops(ids);
+                  setResult(null);
+                }}
+                onBack={() => setOpenStep(2)}
+                onEditSeason={() => setOpenStep(2)}
+                onSubmit={handleSubmit}
+                submitting={submitting}
+                result={result}
+              />
+            )}
+            {submitError && <p className="m-0 mt-3 text-[14px] text-danger" role="alert">{submitError}</p>}
+          </ErrorBoundary>
         </AccordionSection>
       </div>
     </main>

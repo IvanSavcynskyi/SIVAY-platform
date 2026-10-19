@@ -40,9 +40,13 @@ export default function FieldStep({ onFieldReady }) {
 
   useEffect(() => {
     let cancelled = false;
-    listFields().then((fields) => {
-      if (!cancelled) setSavedFields(fields);
-    });
+    listFields()
+      .then((fields) => {
+        if (!cancelled && Array.isArray(fields)) setSavedFields(fields);
+      })
+      .catch(() => {
+        if (!cancelled) setSavedFields([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -115,7 +119,10 @@ export default function FieldStep({ onFieldReady }) {
     setBoundary(drawPoints);
     setName(`Поле №${savedFields.length + 1}`);
     setMode('edit');
-    setFocus({ bounds: pathBounds(drawPoints) });
+    const bounds = pathBounds(drawPoints);
+    if (bounds) {
+      setFocus({ bounds });
+    }
   };
 
   const cancelDrawing = () => {
@@ -160,10 +167,13 @@ export default function FieldStep({ onFieldReady }) {
 
   const previewSaved = (fieldId) => {
     const field = savedFields.find((f) => f.id === fieldId);
-    if (!field) return;
+    if (!field || !Array.isArray(field.boundary)) return;
     setPreviewField(field);
     setMode('saved');
-    setFocus({ bounds: pathBounds(field.boundary) });
+    const bounds = pathBounds(field.boundary);
+    if (bounds) {
+      setFocus({ bounds });
+    }
   };
 
   const area = mode === 'draw' ? polygonAreaHa(drawPoints) : boundary ? polygonAreaHa(boundary) : 0;
