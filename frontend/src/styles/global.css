@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #19c463;
+  --color-brand-hover: #15b45a;
+  --color-brand-dark: #0b5a3e;
+  --color-brand-darkest: #052f23;
+  --color-brand-tint: #f0fdf4;
+  --color-brand-soft: #dcfce7;
+  --color-brand-text: #101a24;
+  --color-muted: #66736d;
+  --color-border-main: #dce5e0;
+  --color-border-soft: #e6f1ec;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f2f7f4;
+  --color-surface-panel: #f4f9fb;
+  --color-sand: #f8f1e7;
+  --color-sky: #eff6ff;
+  --color-sun: #fff7d6;
+  --color-peach: #fff0e8;
+  --color-danger: #c0362c;
+  --color-danger-soft: #fdf1f0;
+
+  --shadow-button: 0 6px 9px rgba(13, 45, 32, 0.08);
+  --shadow-button-soft: 0 4px 7px rgba(13, 45, 32, 0.04);
+  --shadow-card: 0 8px 10px rgba(13, 45, 32, 0.06);
+
+  --font-main: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --animate-notice-in: notice-in 0.2s ease-out;
+  --animate-auth-fade-in: auth-fade-in 0.2s ease-out;
+  --animate-auth-pop-in: auth-pop-in 0.2s ease-out;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root {
+  --color-brand: #19c463;
+  --color-brand-dark: #0b5a3e;
+  --color-brand-darkest: #052f23;
+  --color-brand-tint: #f0fdf4;
+  --color-brand-soft: #dcfce7;
+  --color-text: #101a24;
+  --color-muted: #66736d;
+  --color-border: #dce5e0;
+  --color-border-soft: #e6f1ec;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f2f7f4;
+  --color-surface-panel: #f4f9fb;
+  --color-sand: #f8f1e7;
+  --color-sky: #eff6ff;
+  --color-sun: #fff7d6;
+  --color-peach: #fff0e8;
+
+  --shadow-button: 0 6px 9px rgba(13, 45, 32, 0.08);
+  --shadow-button-soft: 0 4px 7px rgba(13, 45, 32, 0.04);
+  --shadow-card: 0 8px 10px rgba(13, 45, 32, 0.06);
+
+  --font-main: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --page-max-width: 1440px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: break-word;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(25, 196, 99, 0.55);
+  outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
