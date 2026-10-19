@@ -1,27 +1,27 @@
 import Button from '../Button/Button';
 import { useNotice } from '../Notice/NoticeProvider';
+import { useAuth } from '../../context/useAuth';
 import AuthField from './AuthField';
 import GoogleIcon from './GoogleIcon';
 import useAuthForm from './useAuthForm';
-import { signUp } from './authApi';
 import { validateEmail, validateName, validateNewPassword } from './validators';
 
 const VALIDATORS = { name: validateName, email: validateEmail, password: validateNewPassword };
 
-export default function SignUpForm({ onNavigate, onClose }) {
+export default function SignUpForm({ onNavigate }) {
   const { showNotice } = useNotice();
+  const { register } = useAuth();
   const { values, errors, formError, setFormError, submitting, handleChange, handleSubmit } =
     useAuthForm({ name: '', email: '', password: '' }, VALIDATORS);
 
   const submit = handleSubmit(async (formValues) => {
-    const result = await signUp(formValues);
-
+    const result = await register(formValues);
 
     if (result.ok) {
-  showNotice('Акаунт успішно створено! Тепер увійдіть у свій акаунт.');
-  onNavigate('signin');
-  return;
-}
+      showNotice('Акаунт успішно створено! Тепер увійдіть у свій акаунт.');
+      onNavigate('signin');
+      return;
+    }
 
     setFormError(result.message || 'Не вдалося створити акаунт. Спробуйте ще раз.');
   });
@@ -40,7 +40,7 @@ export default function SignUpForm({ onNavigate, onClose }) {
       <Button
         variant="secondary"
         className="w-full gap-2.5 text-base md:gap-3 md:text-[17px]"
-        onClick={() => showNotice('Реєстрація через Google ще не реалізована.')}
+        onClick={() => showNotice('Реєстрація через Google наразі не підключена на бекенді.')}
       >
         <span className="inline-flex items-center gap-2.5 md:gap-3">
           <GoogleIcon />
@@ -96,7 +96,7 @@ export default function SignUpForm({ onNavigate, onClose }) {
         )}
 
         <Button type="submit" arrow disabled={submitting} className="w-full">
-          Зареєструватися
+          {submitting ? 'Реєструємо…' : 'Зареєструватися'}
         </Button>
       </form>
 
