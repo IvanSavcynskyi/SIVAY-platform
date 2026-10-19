@@ -1,4 +1,7 @@
-const rawBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ? import.meta.env.VITE_API_URL : '';
+const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+const rawBase = (isDev && import.meta.env?.VITE_DIRECT_API !== 'true')
+  ? ''
+  : ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '');
 const API_BASE_URL = rawBase.replace(/\/+$/, '');
 
 export const TOKEN_KEY = 'sivay_access_token';
@@ -32,11 +35,11 @@ export function clearStoredToken() {
 }
 
 function formatDetailMessage(detail) {
-  if (typeof detail === 'string') {
+  if (typeof detail === 'string' && detail.trim()) {
     if (detail.includes('Incorrect username or password') || detail.includes('Incorrect email or password')) {
       return 'Невірний логін або пароль.';
     }
-    if (detail.includes('already registered') || detail.includes('already exists')) {
+    if (detail.includes('already registered') || detail.includes('already exists') || detail.includes('вже існує')) {
       return 'Користувач із такою електронною поштою вже зареєстрований.';
     }
     if (detail.includes('Not authenticated') || detail.includes('Could not validate credentials')) {
@@ -45,7 +48,7 @@ function formatDetailMessage(detail) {
     return detail;
   }
 
-  if (Array.isArray(detail)) {
+  if (Array.isArray(detail) && detail.length > 0) {
     return detail
       .map((item) => {
         const field = item?.loc?.[item.loc.length - 1];
@@ -58,7 +61,11 @@ function formatDetailMessage(detail) {
       .join('; ');
   }
 
-  return 'Не вдалося виконати запит.';
+  if (detail && typeof detail === 'object') {
+    return detail.message || detail.msg || detail.error || '';
+  }
+
+  return '';
 }
 
 export async function apiRequest(path, options = {}) {
@@ -77,7 +84,23 @@ export async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message = formatDetailMessage(data?.detail) || 'Не вдалося виконати запит до сервера.';
+    const rawDetail = data?.detail || data?.message || data?.error;
+    let message = formatDetailMessage(rawDetail);
+
+    if (!message) {
+      if (response.status === 502 || response.status === 504) {
+        message = 'Помилка 502 (Bad Gateway): не вдалося з\'єднатися з бекендом. Перевірте, чи запущений сервер FastAPI (uvicorn) та чи співпадає порт (очікується http://127.0.0.1:8000).';
+      } else if (response.status === 500) {
+        message = 'Помилка 500: внутрішня помилка сервера бекенду. Перевірте, чи створені таблиці в PostgreSQL та логи у терміналі бекенду.';
+      } else if (response.status === 404) {
+        message = 'Помилка 404: ендпоінт не знайдено на сервері.';
+      } else if (response.status === 401 || response.status === 403) {
+        message = 'Невірний логін або пароль.';
+      } else {
+        message = `Помилка сервера (${response.status}).`;
+      }
+    }
+
     return {
       ok: false,
       status: response.status,

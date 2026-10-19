@@ -245,3 +245,42 @@ test('7. signOut: clears tokens from storage', () => {
   assert.equal(res.ok, true);
   assert.equal(getStoredToken(), null);
 });
+
+test('8. apiRequest: provides actionable messages on 502 Bad Gateway and 500 server error', async () => {
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 502,
+    json: async () => {
+      throw new Error('Not JSON');
+    },
+  });
+
+  const res502 = await signUp({
+    name: 'Test',
+    email: 'test502@example.com',
+    password: 'password123',
+  });
+
+  assert.equal(res502.ok, false);
+  assert.equal(res502.status, 502);
+  assert.ok(res502.message.includes('502 (Bad Gateway)'));
+  assert.ok(res502.message.includes('8000'));
+
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 500,
+    json: async () => ({
+      detail: '',
+    }),
+  });
+
+  const res500 = await signUp({
+    name: 'Test',
+    email: 'test500@example.com',
+    password: 'password123',
+  });
+
+  assert.equal(res500.ok, false);
+  assert.equal(res500.status, 500);
+  assert.ok(res500.message.includes('500'));
+});
