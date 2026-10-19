@@ -14,33 +14,64 @@ function el(tag, className, text) {
 }
 
 function addMarker(maps, map, { position, content, clickable = false, zIndex }) {
-  return new maps.marker.AdvancedMarkerElement({ map, position, content, gmpClickable: clickable, zIndex });
+  if (!maps || !map || !position || !Number.isFinite(position.lat) || !Number.isFinite(position.lng)) {
+    return null;
+  }
+  try {
+    if (maps.marker?.AdvancedMarkerElement) {
+      return new maps.marker.AdvancedMarkerElement({ map, position, content, gmpClickable: clickable, zIndex });
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 const removeMarker = (marker) => {
-  if (marker) marker.map = null;
+  if (marker) {
+    try {
+      marker.map = null;
+    } catch {
+      // safe
+    }
+  }
 };
 
 const readPath = (polygon) => {
-  const path = polygon?.getPath?.();
+  if (!polygon) return [];
+  const path = polygon.getPath?.();
 
   if (!path || typeof path.getArray !== 'function') {
+    const paths = polygon.getPaths?.();
+    if (paths && typeof paths.getAt === 'function' && paths.getLength() > 0) {
+      const first = paths.getAt(0);
+      if (first && typeof first.getArray === 'function') {
+        return first.getArray().map((point) => (point.toJSON ? point.toJSON() : { lat: point.lat(), lng: point.lng() }));
+      }
+    }
     return [];
   }
 
-  return path.getArray().map((point) => point.toJSON());
+  return path.getArray().map((point) => (point.toJSON ? point.toJSON() : { lat: point.lat(), lng: point.lng() }));
 };
 
 function replacePath(maps, polygon, points) {
-  const arr = polygon.getPath();
-  arr.clear();
-  points.forEach((pt) => arr.push(new maps.LatLng(pt.lat, pt.lng)));
+  if (!polygon || !maps || !Array.isArray(points)) return;
+  const valid = points.filter((pt) => pt && Number.isFinite(pt.lat) && Number.isFinite(pt.lng));
+  const latLngs = valid.map((pt) => new maps.LatLng(pt.lat, pt.lng));
+  const arr = polygon.getPath?.();
+  if (arr && typeof arr.clear === 'function' && typeof arr.push === 'function') {
+    arr.clear();
+    latLngs.forEach((pt) => arr.push(pt));
+  } else if (typeof polygon.setPaths === 'function') {
+    polygon.setPaths([latLngs]);
+  }
 }
 
 export function LocationMarker({ position, label }) {
   const { map, maps } = useMap();
   useEffect(() => {
-    if (!position) return undefined;
+    if (!map || !maps || !position) return undefined;
     const content = el('div', 'flex flex-col items-center gap-1.5');
     const pin = el('div', 'grid h-11 w-11 place-items-center rounded-full border-[3px] border-white bg-brand shadow-[0_3px_5px_rgba(8,46,32,0.3)]');
     pin.innerHTML = PIN_SVG;
@@ -63,10 +94,18 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
     onChangeRef.current = onChange;
   });
 
+  const initialPathRef = useRef(path);
+
   useEffect(() => {
+    if (!map || !maps) return undefined;
+    const initialPath = initialPathRef.current;
+    const valid = Array.isArray(initialPath)
+      ? initialPath.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+      : [];
+
     const polygon = new maps.Polygon({
       map,
-      paths: path ?? [],
+      paths: valid.map((pt) => new maps.LatLng(pt.lat, pt.lng)),
       strokeColor: '#19c463',
       strokeWeight: 3,
       fillColor: '#19c463',
@@ -76,13 +115,22 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
       zIndex: 5,
     });
     polygonRef.current = polygon;
-    const arr = polygon.getPath();
+    const arr = polygon.getPath?.();
     const emit = () => {
-      if (!suppress.current) onChangeRef.current?.(readPath(polygon));
+      if (!suppress.current && polygonRef.current) {
+        onChangeRef.current?.(readPath(polygonRef.current));
+      }
     };
-    const listeners = editable ? [arr.addListener('set_at', emit), arr.addListener('insert_at', emit), arr.addListener('remove_at', emit)] : [];
+    const listeners = [];
+    if (editable && arr && typeof arr.addListener === 'function') {
+      listeners.push(
+        arr.addListener('set_at', emit),
+        arr.addListener('insert_at', emit),
+        arr.addListener('remove_at', emit),
+      );
+    }
     return () => {
-      listeners.forEach((l) => l.remove());
+      listeners.forEach((l) => l?.remove?.());
       polygon.setMap(null);
       polygonRef.current = null;
     };
@@ -90,17 +138,19 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
 
   useEffect(() => {
     const polygon = polygonRef.current;
-    if (!polygon || !path) return;
-    if (!pathsEqual(readPath(polygon), path)) {
+    if (!polygon || !path || !maps) return;
+    const current = readPath(polygon);
+    if (!pathsEqual(current, path)) {
       suppress.current = true;
       replacePath(maps, polygon, path);
       suppress.current = false;
     }
-  }, [map, maps, editable, path]);
+  }, [maps, path]);
 
   useEffect(() => {
-    if (!showVertices || !path) return undefined;
-    const markers = path.map((position) => {
+    if (!showVertices || !path || !map || !maps) return undefined;
+    const valid = path.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    const markers = valid.map((position) => {
       const dot = el('div', 'h-3 w-3 rounded-full border-2 border-brand bg-white shadow');
       dot.style.transform = 'translateY(50%)';
       return addMarker(maps, map, { position, content: dot, zIndex: 6 });
@@ -111,7 +161,7 @@ export function FieldBoundaryLayer({ path, editable = false, showVertices = fals
   return null;
 }
 
-export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, editable = false, onPlotClick, onVertexMove, onStructureChange }) {
+export function PlotsLayer({ plots = [], selectedIds = NO_IDS, interactive = false, editable = false, onPlotClick, onVertexMove, onStructureChange }) {
   const { map, maps } = useMap();
   const entries = useRef(new Map());
   const suppress = useRef(false);
@@ -122,45 +172,61 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
   });
 
   useEffect(() => {
+    if (!map || !maps) return undefined;
     const store = entries.current;
 
     const destroy = (entry) => {
-      entry.listeners.forEach((l) => l.remove());
+      entry.listeners.forEach((l) => l?.remove?.());
       entry.polygon.setMap(null);
       removeMarker(entry.marker);
     };
 
     const create = (plot) => {
-      const polygon = new maps.Polygon({ map, paths: plot.path, strokeColor: '#ffffff', strokeOpacity: 0.95 });
-      const arr = polygon.getPath();
+      const validPath = Array.isArray(plot.path)
+        ? plot.path.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+        : [];
+      const polygon = new maps.Polygon({
+        map,
+        paths: validPath.map((pt) => new maps.LatLng(pt.lat, pt.lng)),
+        strokeColor: '#ffffff',
+        strokeOpacity: 0.95,
+      });
+      const arr = polygon.getPath?.();
       const listeners = [
         polygon.addListener('click', () => latest.current.onPlotClick?.(plot.id)),
-        arr.addListener('set_at', (index, previous) => {
-          if (suppress.current) return;
-          const accepted = latest.current.onVertexMove?.(previous.toJSON(), arr.getAt(index).toJSON());
-          if (accepted === false) {
-            suppress.current = true;
-            arr.setAt(index, previous);
-            suppress.current = false;
-          }
-        }),
-        ...['insert_at', 'remove_at'].map((evt) =>
-          arr.addListener(evt, () => {
+      ];
+      if (arr && typeof arr.addListener === 'function') {
+        listeners.push(
+          arr.addListener('set_at', (index, previous) => {
             if (suppress.current) return;
-            const current = latest.current.plots.find((p) => p.id === plot.id);
-            if (current) {
+            const currentPt = arr.getAt(index);
+            if (!currentPt) return;
+            const accepted = latest.current.onVertexMove?.(previous.toJSON(), currentPt.toJSON());
+            if (accepted === false) {
               suppress.current = true;
-              replacePath(maps, polygon, current.path);
+              arr.setAt(index, previous);
               suppress.current = false;
             }
-            latest.current.onStructureChange?.();
           }),
-        ),
-      ];
+          ...['insert_at', 'remove_at'].map((evt) =>
+            arr.addListener(evt, () => {
+              if (suppress.current) return;
+              const current = latest.current.plots?.find((p) => p.id === plot.id);
+              if (current) {
+                suppress.current = true;
+                replacePath(maps, polygon, current.path);
+                suppress.current = false;
+              }
+              latest.current.onStructureChange?.();
+            }),
+          ),
+        );
+      }
       return { polygon, listeners, marker: null, markerKey: '' };
     };
 
-    const ids = new Set(plots.map((p) => p.id));
+    const validPlots = Array.isArray(plots) ? plots.filter((p) => p && Array.isArray(p.path)) : [];
+    const ids = new Set(validPlots.map((p) => p.id));
     store.forEach((entry, id) => {
       if (!ids.has(id)) {
         destroy(entry);
@@ -168,13 +234,13 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
       }
     });
 
-    plots.forEach((plot) => {
+    validPlots.forEach((plot) => {
       let entry = store.get(plot.id);
       if (!entry) {
         entry = create(plot);
         store.set(plot.id, entry);
       }
-      const selected = selectedIds.includes(plot.id);
+      const selected = Array.isArray(selectedIds) && selectedIds.includes(plot.id);
       entry.polygon.setOptions({
         fillColor: plot.color,
         fillOpacity: selected ? 0.62 : 0.38,
@@ -191,19 +257,21 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
 
       const centroid = polygonCentroid(plot.path);
       const key = `${plot.label}|${plot.color}|${selected}`;
-      if (centroid && key !== entry.markerKey) {
-        removeMarker(entry.marker);
-        const badge = el(
-          'div',
-          `grid h-7 w-7 place-items-center rounded-full border-2 text-[13px] font-bold text-white shadow-md ${selected ? 'border-brand-darkest' : 'border-white'}`,
-          plot.label,
-        );
-        badge.style.background = plot.color;
-        badge.style.transform = 'translateY(50%)';
-        entry.marker = addMarker(maps, map, { position: centroid, content: badge, zIndex: 7 });
-        entry.markerKey = key;
-      } else if (centroid && entry.marker) {
-        entry.marker.position = centroid;
+      if (centroid && Number.isFinite(centroid.lat) && Number.isFinite(centroid.lng)) {
+        if (key !== entry.markerKey) {
+          removeMarker(entry.marker);
+          const badge = el(
+            'div',
+            `grid h-7 w-7 place-items-center rounded-full border-2 text-[13px] font-bold text-white shadow-md ${selected ? 'border-brand-darkest' : 'border-white'}`,
+            plot.label,
+          );
+          badge.style.background = plot.color;
+          badge.style.transform = 'translateY(50%)';
+          entry.marker = addMarker(maps, map, { position: centroid, content: badge, zIndex: 7 });
+          entry.markerKey = key;
+        } else if (entry.marker) {
+          entry.marker.position = centroid;
+        }
       }
     });
   }, [map, maps, plots, selectedIds, interactive, editable]);
@@ -212,7 +280,7 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
     const store = entries.current;
     return () => {
       store.forEach((entry) => {
-        entry.listeners.forEach((l) => l.remove());
+        entry.listeners.forEach((l) => l?.remove?.());
         entry.polygon.setMap(null);
         removeMarker(entry.marker);
       });
@@ -223,7 +291,7 @@ export function PlotsLayer({ plots, selectedIds = NO_IDS, interactive = false, e
   return null;
 }
 
-export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
+export function DrawPolygonLayer({ points = [], onAddPoint, onClose }) {
   const { map, maps } = useMap();
   const handlers = useRef({});
 
@@ -232,20 +300,26 @@ export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
   });
 
   useEffect(() => {
+    if (!map) return undefined;
     const listener = map.addListener('click', (e) => {
       if (e.latLng) handlers.current.onAddPoint?.(e.latLng.toJSON());
     });
     map.setOptions({ draggableCursor: 'crosshair' });
     return () => {
-      listener.remove();
+      listener?.remove?.();
       map.setOptions({ draggableCursor: null });
     };
   }, [map]);
 
   useEffect(() => {
+    if (!map || !maps) return undefined;
+    const valid = Array.isArray(points)
+      ? points.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+      : [];
+
     const polygon = new maps.Polygon({
       map,
-      paths: points,
+      paths: valid.map((pt) => new maps.LatLng(pt.lat, pt.lng)),
       strokeColor: '#19c463',
       strokeWeight: 3,
       fillColor: '#19c463',
@@ -253,8 +327,8 @@ export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
       clickable: false,
       zIndex: 5,
     });
-    const markers = points.map((position, index) => {
-      const closable = index === 0 && points.length >= 3;
+    const markers = valid.map((position, index) => {
+      const closable = index === 0 && valid.length >= 3;
       const dot = el(
         'div',
         closable
@@ -263,7 +337,9 @@ export function DrawPolygonLayer({ points, onAddPoint, onClose }) {
       );
       dot.style.transform = 'translateY(50%)';
       const marker = addMarker(maps, map, { position, content: dot, clickable: closable, zIndex: 8 });
-      if (closable) marker.addListener('click', () => handlers.current.onClose?.());
+      if (closable && marker) {
+        marker.addListener('click', () => handlers.current.onClose?.());
+      }
       return marker;
     });
     return () => {
@@ -284,11 +360,12 @@ export function DrawLineLayer({ onComplete }) {
   });
 
   useEffect(() => {
+    if (!map || !maps) return undefined;
     let first = null;
     let preview = null;
     let dot = null;
     const clear = () => {
-      preview?.setMap(null);
+      preview?.setMap?.(null);
       removeMarker(dot);
       preview = null;
       dot = null;
@@ -321,8 +398,8 @@ export function DrawLineLayer({ onComplete }) {
     });
     map.setOptions({ draggableCursor: 'crosshair' });
     return () => {
-      clickListener.remove();
-      moveListener.remove();
+      clickListener?.remove?.();
+      moveListener?.remove?.();
       clear();
       map.setOptions({ draggableCursor: null });
     };

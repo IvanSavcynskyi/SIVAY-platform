@@ -16,9 +16,13 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
 
   useEffect(() => {
     let cancelled = false;
-    listCropProposals().then((list) => {
-      if (!cancelled) setProposals(list);
-    });
+    listCropProposals()
+      .then((list) => {
+        if (!cancelled && Array.isArray(list)) setProposals(list);
+      })
+      .catch(() => {
+        if (!cancelled) setProposals([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -52,15 +56,16 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
     }
   };
 
-  const labels = season.plots.map((p) => p.label).join(', ');
+  const seasonPlots = Array.isArray(season?.plots) ? season.plots.filter(Boolean) : [];
+  const labels = seasonPlots.map((p) => p.label).join(', ');
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl bg-surface-panel px-4 py-3.5 md:px-5">
         {[
-          ['Поле', `${field.name} · ${formatHa(field.areaHa)}`],
-          ['Сезон', String(season.year)],
-          ['Ділянки', `${season.plots.length} — ${labels}`],
+          ['Поле', `${field?.name || 'Поле'} · ${formatHa(field?.areaHa)}`],
+          ['Сезон', String(season?.year ?? '—')],
+          ['Ділянки', `${seasonPlots.length} — ${labels || '—'}`],
         ].map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[11px] font-bold tracking-[0.6px] text-muted uppercase">{label}</span>

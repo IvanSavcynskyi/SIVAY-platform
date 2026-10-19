@@ -66,14 +66,24 @@ export default function GoogleMapView({ focus, badge, legend, className = '', ch
   useEffect(() => {
     if (!ctx || !focus) return;
     const { map, maps } = ctx;
-    if (focus.bounds) {
-      map.fitBounds(focus.bounds, 32);
-      maps.event.addListenerOnce(map, 'idle', () => {
-        if ((map.getZoom() ?? 0) > 19) map.setZoom(19);
-      });
-    } else if (focus.center) {
-      map.setCenter(focus.center);
-      map.setZoom(focus.zoom ?? 14);
+    try {
+      if (focus.bounds) {
+        const { south, north, west, east } = focus.bounds;
+        if (Number.isFinite(south) && Number.isFinite(north) && Number.isFinite(west) && Number.isFinite(east) && south <= north) {
+          map.fitBounds(focus.bounds, 32);
+          maps.event.addListenerOnce(map, 'idle', () => {
+            if ((map.getZoom() ?? 0) > 19) map.setZoom(19);
+          });
+        }
+      } else if (focus.center) {
+        const { lat, lng } = focus.center;
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          map.setCenter(focus.center);
+          map.setZoom(focus.zoom ?? 14);
+        }
+      }
+    } catch {
+      // Safe fallback
     }
   }, [ctx, focus]);
 
@@ -84,10 +94,21 @@ export default function GoogleMapView({ focus, badge, legend, className = '', ch
   const zoomBy = (delta) => ctx && ctx.map.setZoom((ctx.map.getZoom() ?? 6) + delta);
   const recenter = () => {
     if (!ctx || !focus) return;
-    if (focus.bounds) ctx.map.fitBounds(focus.bounds, 32);
-    else if (focus.center) {
-      ctx.map.setCenter(focus.center);
-      ctx.map.setZoom(focus.zoom ?? 14);
+    try {
+      if (focus.bounds) {
+        const { south, north, west, east } = focus.bounds;
+        if (Number.isFinite(south) && Number.isFinite(north) && Number.isFinite(west) && Number.isFinite(east) && south <= north) {
+          ctx.map.fitBounds(focus.bounds, 32);
+        }
+      } else if (focus.center) {
+        const { lat, lng } = focus.center;
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          ctx.map.setCenter(focus.center);
+          ctx.map.setZoom(focus.zoom ?? 14);
+        }
+      }
+    } catch {
+      // Safe fallback
     }
   };
 
