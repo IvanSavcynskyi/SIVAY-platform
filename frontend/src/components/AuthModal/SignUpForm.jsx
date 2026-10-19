@@ -16,15 +16,12 @@ export default function SignUpForm({ onNavigate, onClose }) {
   const submit = handleSubmit(async (formValues) => {
     const result = await signUp(formValues);
 
-    if (result.notConnected) {
-      showNotice('Реєстрація ще не реалізована.');
-      return;
-    }
 
     if (result.ok) {
-      onClose();
-      return;
-    }
+  showNotice('Акаунт успішно створено! Тепер увійдіть у свій акаунт.');
+  onNavigate('signin');
+  return;
+}
 
     setFormError(result.message || 'Не вдалося створити акаунт. Спробуйте ще раз.');
   });

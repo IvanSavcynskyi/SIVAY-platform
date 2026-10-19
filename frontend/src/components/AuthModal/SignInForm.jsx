@@ -16,10 +16,6 @@ export default function SignInForm({ onNavigate, onClose }) {
   const submit = handleSubmit(async (formValues) => {
     const result = await signIn(formValues);
 
-    if (result.notConnected) {
-      showNotice('Вхід ще не реалізовано.');
-      return;
-    }
 
     if (result.ok) {
       onClose();
