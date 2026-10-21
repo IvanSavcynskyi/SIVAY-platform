@@ -1,6 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-
-const NoticeContext = createContext({ showNotice: () => {} });
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { NoticeContext } from './NoticeContext';
 
 export function NoticeProvider({ children }) {
   const [message, setMessage] = useState('');
@@ -34,6 +33,4 @@ export function NoticeProvider({ children }) {
   );
 }
 
-export function useNotice() {
-  return useContext(NoticeContext);
-}
+export default NoticeProvider;

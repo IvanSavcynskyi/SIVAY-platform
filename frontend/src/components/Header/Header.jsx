@@ -3,7 +3,7 @@ import AppLink from '../AppLink/AppLink';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
 import { useAuth } from '../../context/useAuth';
-import { useNotice } from '../Notice/NoticeProvider';
+import { useNotice } from '../Notice/useNotice';
 import { useAuthModal } from '../AuthModal/useAuthModal';
 import { NAV_LINKS } from '../../constants/siteLinks';
 

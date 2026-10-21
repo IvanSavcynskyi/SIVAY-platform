@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
-import { useNotice } from '../Notice/NoticeProvider';
+import { useNotice } from '../Notice/useNotice';
 import AuthField from './AuthField';
 import useAuthForm from './useAuthForm';
 import { requestPasswordReset } from './authApi';
