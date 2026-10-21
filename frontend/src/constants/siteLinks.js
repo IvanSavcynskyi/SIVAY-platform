@@ -12,6 +12,6 @@ export const INFO_LINKS = [
   { id: 'contacts', label: 'Контакти', href: '/contacts', ready: false },
 ];
 
-export const ANALYSIS_LINK = { href: '/analysis', ready: false };
+export const ANALYSIS_LINK = { href: '/analysis/new', ready: true };
 
 export const ABOUT_LINK = { href: '/about', ready: true };

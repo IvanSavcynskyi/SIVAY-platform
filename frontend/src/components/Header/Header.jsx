@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import AppLink from '../AppLink/AppLink';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
-import { useAuthModal } from '../AuthModal/AuthModalProvider';
+import { useAuth } from '../../context/useAuth';
+import { useNotice } from '../Notice/NoticeProvider';
+import { useAuthModal } from '../AuthModal/useAuthModal';
 import { NAV_LINKS } from '../../constants/siteLinks';
 
 const WIDE_SCREEN_QUERY = '(min-width: 768px)';
@@ -14,6 +16,8 @@ export default function Header({ activeLink = 'home' }) {
   const closeRef = useRef(null);
   const menuRef = useRef(null);
   const { openAuth } = useAuthModal();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { showNotice } = useNotice();
 
   useEffect(() => {
     if (!isOpen) {
@@ -93,9 +97,21 @@ export default function Header({ activeLink = 'home' }) {
   };
 
   const handleProfile = (event) => {
-    const returnFocusTo = getReturnFocusTarget(event);
+    if (isAuthenticated) {
+      closeMenu();
+      const name = user?.first_name || user?.email?.split('@')[0] || 'користувач';
+      showNotice(`Ви увійшли як ${name} (${user?.email || ''}).`);
+    } else {
+      const returnFocusTo = getReturnFocusTarget(event);
+      closeMenu();
+      openAuth('signin', returnFocusTo);
+    }
+  };
+
+  const handleLogout = () => {
     closeMenu();
-    openAuth('signin', returnFocusTo);
+    logout();
+    showNotice('Ви успішно вийшли з акаунта.');
   };
 
   return (
@@ -181,23 +197,45 @@ export default function Header({ activeLink = 'home' }) {
             </ul>
           </nav>
 
-          <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
-              onClick={handleLogin}
-            >
-              Увійти
-            </Button>
-            <Button
-              size="sm"
-              className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
-              onClick={handleRegister}
-            >
-              Зареєструватися
-            </Button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+              <div
+                className="flex items-center gap-2 rounded-xl bg-brand-tint px-3 py-1.5 text-brand-darkest border border-[#bbf7d0]"
+                title={user?.email}
+              >
+                <Icon name="user" size={18} className="text-brand-dark shrink-0" />
+                <span className="truncate text-[14px] font-semibold max-w-[140px]">
+                  {user?.first_name || user?.email?.split('@')[0] || 'Акаунт'}
+                </span>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-11 w-full text-[15px] md:w-auto"
+                onClick={handleLogout}
+              >
+                Вийти
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
+                onClick={handleLogin}
+              >
+                Увійти
+              </Button>
+              <Button
+                size="sm"
+                className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
+                onClick={handleRegister}
+              >
+                Зареєструватися
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

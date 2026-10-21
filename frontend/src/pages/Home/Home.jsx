@@ -110,6 +110,15 @@ const TONE_CLASSES = {
 };
 
 export default function Home() {
+  const scrollToWhy = (event) => {
+    event.preventDefault();
+
+    document.getElementById('why-sivay')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
     <>
       {/* Hero section */}
@@ -141,6 +150,7 @@ export default function Home() {
               <Button
                 variant="secondary"
                 href="#why-sivay"
+                onClick={scrollToWhy}
                 className="h-auto min-h-12 w-full flex-1 whitespace-normal px-3 py-2 text-center text-[15px] md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px]"
               >
                 Дізнатися більше

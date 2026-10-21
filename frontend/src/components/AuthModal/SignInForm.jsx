@@ -1,27 +1,25 @@
 import Button from '../Button/Button';
 import { useNotice } from '../Notice/NoticeProvider';
+import { useAuth } from '../../context/useAuth';
 import AuthField from './AuthField';
 import GoogleIcon from './GoogleIcon';
 import useAuthForm from './useAuthForm';
-import { signIn } from './authApi';
 import { validateCurrentPassword, validateEmail } from './validators';
 
 const VALIDATORS = { email: validateEmail, password: validateCurrentPassword };
 
 export default function SignInForm({ onNavigate, onClose }) {
   const { showNotice } = useNotice();
+  const { login } = useAuth();
   const { values, errors, formError, setFormError, submitting, handleChange, handleSubmit } =
     useAuthForm({ email: '', password: '' }, VALIDATORS);
 
   const submit = handleSubmit(async (formValues) => {
-    const result = await signIn(formValues);
-
-    if (result.notConnected) {
-      showNotice('Вхід ще не реалізовано.');
-      return;
-    }
+    const result = await login(formValues);
 
     if (result.ok) {
+      const displayName = result.user?.first_name || result.user?.email || formValues.email;
+      showNotice(`Вітаємо, ${displayName}! Ви успішно увійшли.`);
       onClose();
       return;
     }
@@ -43,7 +41,7 @@ export default function SignInForm({ onNavigate, onClose }) {
       <Button
         variant="secondary"
         className="w-full gap-2.5 text-base md:gap-3 md:text-[17px]"
-        onClick={() => showNotice('Вхід через Google ще не реалізовано.')}
+        onClick={() => showNotice('Вхід через Google наразі не підключений на бекенді.')}
       >
         <span className="inline-flex items-center gap-2.5 md:gap-3">
           <GoogleIcon />
@@ -100,7 +98,7 @@ export default function SignInForm({ onNavigate, onClose }) {
         )}
 
         <Button type="submit" arrow disabled={submitting} className="w-full">
-          Увійти
+          {submitting ? 'Входимо…' : 'Увійти'}
         </Button>
       </form>
 
