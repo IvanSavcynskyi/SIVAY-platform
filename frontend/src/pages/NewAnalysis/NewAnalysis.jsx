@@ -52,11 +52,6 @@ export default function NewAnalysis() {
     setOpenStep(2);
   };
 
-  const handleFieldChange = (updated) => {
-    setField(updated);
-    setResult(null);
-  };
-
   const handleSeasonConfirm = (year) => {
     setSeasonYear(year);
     setResult(null);
@@ -128,7 +123,7 @@ export default function NewAnalysis() {
           title="Ділянки та попередні культури"
           summary={step2Summary}
         >
-          {field && <SeasonsStep key={field.id} field={field} onFieldChange={handleFieldChange} onConfirm={handleSeasonConfirm} />}
+          {field && <SeasonsStep key={field.id} field={field} onFieldChange={setField} onConfirm={handleSeasonConfirm} />}
         </AccordionSection>
 
         <AccordionSection
