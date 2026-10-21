@@ -39,13 +39,12 @@ const years = useMemo(
 );
 
 const latestYear = years[0];
+const earliestYear = years[years.length - 1];
 
 const [activeYear, setActiveYear] = useState(
   () => latestYear
 );
 
-const canEditLayout =
-  activeYear === latestYear && activeYear <= currentYear;
   const [mode, setMode] = useState('view'); 
   const [cropPlotId, setCropPlotId] = useState(null);
   const [cropDraft, setCropDraft] = useState('');
@@ -59,7 +58,7 @@ const canEditLayout =
   const [focus, setFocus] = useState(() => ({ bounds: pathBounds(field.boundary) }));
 
   const season = field.seasons[activeYear];
-  const isLatest = canEditLayout;
+  const isLatest = activeYear === latestYear;
   const editing = mode === 'edit';
   const plots = useMemo(() => withColors(editing ? editPlots : season.plots), [editing, editPlots, season.plots]);
   const cropPlot = plots.find((p) => p.id === cropPlotId);
@@ -177,11 +176,13 @@ const canEditLayout =
   const handleNewSeason = () =>
     run(async () => {
       const updated = await createSeason(field.id, { mode: newSeasonMode });
+      const createdYear = Object.keys(updated.seasons).map(Number).find((y) => !field.seasons[y]);
       onFieldChange(updated);
-      setActiveYear(latestYear + 1);
+      setActiveYear(createdYear);
       setMode('view');
-      info(`Сезон ${latestYear + 1} створено. Попередні сезони лишилися без змін.`);
-      });
+      setFocus({ bounds: pathBounds(field.boundary) });
+      info(`Сезон ${createdYear} створено. Інші сезони лишилися без змін — розбивку цього сезону можна змінити кнопкою «Редагувати розбивку».`);
+    });
 
   const otherYears = years.filter((y) => y !== activeYear).reverse();
   const summarize = (y) => field.seasons[y].plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
@@ -276,19 +277,16 @@ const canEditLayout =
               <InfoNote tone="success">
                 <strong>Межі ділянок — окремо для кожного року</strong>
                 <br />
-                <span className="text-muted">Однакові літери в різні роки — різні території. Історичні розбивки не змінюються.</span>
+                <span className="text-muted">Однакові літери в різні роки — різні території. Зміна розбивки одного сезону не впливає на інші.</span>
               </InfoNote>
-              {isLatest ? (
-                <div className="flex flex-col gap-2.5">
-                  <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку</Button>
-                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(activeYear)}>Далі: культури сезону {activeYear}</Button>
-                </div>
-              ) : (
-                <>
-                  <p className="m-0 text-[13px] leading-[1.5] text-muted">Розбивка {activeYear} доступна лише для перегляду, щоб не змінити історію. Записи культур можна виправити через «Змінити».</p>
+              <div className="flex flex-col gap-2.5">
+                <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку {activeYear}</Button>
+                {isLatest ? (
+                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(activeYear)}>Далі: культури сезону {activeYear + 1}</Button>
+                ) : (
                   <Button variant="secondary" size="sm" className="w-full" onClick={() => selectYear(latestYear)}>До поточного сезону {latestYear}</Button>
-                </>
-              )}
+                )}
+              </div>
             </>
           )}
 
@@ -381,11 +379,11 @@ const canEditLayout =
           {mode === 'newSeason' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {latestYear - 1}</h3>
+                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {earliestYear - 1}</h3>
                 <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Межі ділянок кожного року окремі. Попередні сезони не зміняться.</p>
               </div>
               {[
-                ['copy', `Скопіювати розбивку ${latestYear}`, 'Ті самі ділянки, але без записів культур — далі їх можна змінити.'],
+                ['copy', `Скопіювати розбивку ${earliestYear}`, 'Ті самі ділянки, але без записів культур — далі їх можна змінити.'],
                 ['single', 'Одне поле без розбивки', 'Весь контур поля як одна ділянка.'],
               ].map(([id, title, text]) => (
                 <label key={id} className={`flex min-h-[64px] cursor-pointer items-start gap-3 rounded-[14px] border p-3.5 ${newSeasonMode === id ? 'border-brand bg-brand-tint' : 'border-border-main bg-white'}`}>
