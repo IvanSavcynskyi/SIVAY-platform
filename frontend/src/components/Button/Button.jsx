@@ -36,9 +36,15 @@ export default function Button({
     </>
   );
 
-  if (href) {
+    if (href) {
     return (
-      <AppLink href={href} ready={ready} className={classes} {...rest}>
+      <AppLink
+        href={href}
+        ready={ready}
+        onClick={onClick}
+        className={classes}
+        {...rest}
+      >
         {content}
       </AppLink>
     );

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../../context/useAuth';
+import { useAuthModal } from '../../components/AuthModal/useAuthModal';
 import { getCropName } from '../../constants/crops';
 import { submitAnalysisRequest } from '../../services/analysisApi';
 import { formatHa, plotsWord } from '../../utils/format';
@@ -9,6 +11,15 @@ import FieldStep from './components/FieldStep';
 import SeasonsStep from './components/SeasonsStep';
 
 export default function NewAnalysis() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { openAuth } = useAuthModal();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      openAuth('signin');
+    }
+  }, [isLoading, isAuthenticated, openAuth]);
+
   const [openStep, setOpenStep] = useState(1);
   const [field, setField] = useState(null);
   const [seasonYear, setSeasonYear] = useState(null);
@@ -72,6 +83,18 @@ export default function NewAnalysis() {
         .join(', ')}`
     : 'Сезони, поділ поля на ділянки та культури, що на них росли.';
 
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-[720px] px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold text-brand-text">
+          Новий аналіз
+        </h1>
+        <p className="mt-3 text-muted">
+          Увійдіть або зареєструйтеся, щоб створити новий аналіз.
+        </p>
+      </div>
+    );
+  }
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-12 md:px-8 md:pt-9 xl:px-20 xl:pt-[42px] xl:pb-14">
       <header className="mb-6 flex flex-col gap-2 md:mb-7">
