@@ -1,5 +1,5 @@
 import Button from '../Button/Button';
-import { useNotice } from '../Notice/NoticeProvider';
+import { useNotice } from '../Notice/useNotice';
 import { useAuth } from '../../context/useAuth';
 import AuthField from './AuthField';
 import GoogleIcon from './GoogleIcon';

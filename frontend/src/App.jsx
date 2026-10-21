@@ -1,11 +1,16 @@
+import { usePathname } from './router/navigation';
 import PublicLayout from './layouts/PublicLayout';
 import Home from './pages/Home/Home';
 import NewAnalysis from './pages/NewAnalysis/NewAnalysis';
+import NotFound from './pages/NotFound/NotFound';
 
 const normalize = (pathname) => pathname.replace(/\/+$/, '') || '/';
 
 export default function App() {
-  if (normalize(window.location.pathname) === '/analysis/new') {
+  const pathname = usePathname();
+  const currentPath = normalize(pathname);
+
+  if (currentPath === '/analysis/new') {
     return (
       <PublicLayout activeLink="analysis">
         <NewAnalysis />
@@ -13,9 +18,17 @@ export default function App() {
     );
   }
 
+  if (currentPath === '/') {
+    return (
+      <PublicLayout activeLink="home">
+        <Home />
+      </PublicLayout>
+    );
+  }
+
   return (
-    <PublicLayout activeLink="home">
-      <Home />
+    <PublicLayout activeLink="none">
+      <NotFound />
     </PublicLayout>
   );
 }
