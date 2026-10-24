@@ -9,7 +9,7 @@ from alembic import context
 
 from app.core.config import settings
 from app.core.database import Base
-from app.models.user import User
+import app.models  # noqa: F401 — registers all models with Base.metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -48,14 +48,30 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_name=include_name,
+        include_schemas=False,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
+def include_name(name, type_, parent_names):
+    """Tell Alembic to only manage tables that belong to our models.
+    Tables not in Base.metadata will be completely ignored (no DROP TABLE).
+    """
+    if type_ == "table":
+        return name in target_metadata.tables
+    return True
+
+
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_name=include_name,
+        include_schemas=False,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
