@@ -9,19 +9,19 @@ const CONTACT_CHANNELS = [
     id: 'support',
     icon: 'headphones',
     title: 'Служба підтримки',
-    description: 'Технічні запитання щодо сервісу, карт ділянок та розрахунків маржинальності.',
+    description: 'Технічні запитання щодо сервісу, створення полів, карт ділянок та розрахунків.',
     value: 'support@sivay.com.ua',
     href: 'mailto:support@sivay.com.ua',
     badge: 'Пн-Нд 08:00 - 20:00',
   },
   {
-    id: 'agronomist',
-    icon: 'sprout',
-    title: 'Черговий агроном',
-    description: 'Фахові консультації щодо сівозміни, сортів насіння, NDVI та стану ґрунту.',
-    value: 'agronomist@sivay.com.ua',
-    href: 'mailto:agronomist@sivay.com.ua',
-    badge: 'Експертна допомога',
+    id: 'privacy',
+    icon: 'lock-keyhole',
+    title: 'Конфіденційність та геодані',
+    description: 'Захист комерційної таємниці, координати полів, експорт або видалення даних.',
+    value: 'privacy@sivay.com.ua',
+    href: 'mailto:privacy@sivay.com.ua',
+    badge: 'Безпека та GDPR',
   },
   {
     id: 'partners',
@@ -65,7 +65,7 @@ const FAQS = [
   {
     question: 'Як швидко відповідає служба підтримки SIVAY?',
     answer:
-      'У робочий час (08:00 – 20:00) наші спеціалісти відповідають на звернення електронною поштою та в Telegram упродовж 15–30 хвилин. У сезон посівної та збору врожаю черговий агроном доступний у розширеному режимі.',
+      'У робочий час (08:00 – 20:00) наші спеціалісти відповідають на звернення електронною поштою та в Telegram упродовж 15–30 хвилин. У сезон польових робіт підтримка доступна без вихідних у розширеному режимі.',
   },
   {
     question: 'Чи можу я надіслати межі полів у файлах KML, KMZ або SHP?',
@@ -182,7 +182,7 @@ export default function Contacts() {
 
         <p className="m-0 max-w-[840px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
           Маєте запитання щодо розрахунку культур, створення полів чи інтеграцій? 
-          Наша команда агрономів, аналітиків та технічних фахівців готова допомогти вам отримати максимальний прибуток з кожного гектара.
+          Наша команда аналітиків та технічних фахівців готова допомогти вам отримати максимальний результат для вашого господарства.
         </p>
 
         {/* Quick Page Switcher */}
@@ -272,7 +272,7 @@ export default function Contacts() {
                   Графік консультацій та сезонна підтримка
                 </h3>
                 <p className="m-0 mt-1 text-[14px] leading-[1.6] text-muted">
-                  У періоди весняної посівної та осіннього збору врожаю служба технічної та агрономічної підтримки SIVAY працює в посиленому режимі без вихідних з 07:00 до 22:00.
+                  У періоди весняної посівної та осіннього збору врожаю служба клієнтської та технічної підтримки SIVAY працює в посиленому режимі без вихідних з 07:00 до 22:00.
                 </p>
               </div>
             </div>
@@ -390,7 +390,7 @@ export default function Contacts() {
                   className="h-12 w-full rounded-xl border border-border-main bg-white px-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-3 focus:ring-brand/20"
                 >
                   <option value="Технічна підтримка">Технічна підтримка сервісу</option>
-                  <option value="Допомога агронома">Допомога агронома / сівозміна</option>
+                  <option value="Питання по сівозміні">Питання по сівозміні та культурах</option>
                   <option value="Питання по картах">Питання по картах та розрахунках</option>
                   <option value="Комерційна пропозиція">Комерційна пропозиція / Партнерство</option>
                   <option value="Інше">Інше запитання</option>
@@ -516,4 +516,3 @@ export default function Contacts() {
     </div>
   );
 }
-
