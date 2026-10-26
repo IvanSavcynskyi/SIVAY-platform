@@ -32,7 +32,7 @@ test('1. Router navigation: navigate updates history without throwing', () => {
   assert.equal(dispatchedEvent?.type, 'popstate');
 });
 
-test('2. Site links: Privacy and Terms are active and ready', () => {
+test('2. Site links: Privacy, Terms, and Contacts are active and ready', () => {
   const privacyLink = INFO_LINKS.find((l) => l.id === 'privacy');
   const termsLink = INFO_LINKS.find((l) => l.id === 'terms');
   const contactsLink = INFO_LINKS.find((l) => l.id === 'contacts');
@@ -46,5 +46,6 @@ test('2. Site links: Privacy and Terms are active and ready', () => {
   assert.equal(termsLink.ready, true, 'Terms link should be marked ready');
 
   assert.ok(contactsLink, 'Contacts link must exist in INFO_LINKS');
-  assert.equal(contactsLink.ready, false, 'Contacts link remains in progress');
+  assert.equal(contactsLink.href, '/contacts');
+  assert.equal(contactsLink.ready, true, 'Contacts link should be marked ready');
 });

@@ -9,7 +9,7 @@ export const NAV_LINKS = [
 export const INFO_LINKS = [
   { id: 'privacy', label: 'Політика конфіденційності', href: '/privacy', ready: true },
   { id: 'terms', label: 'Умови використання', href: '/terms', ready: true },
-  { id: 'contacts', label: 'Контакти', href: '/contacts', ready: false },
+  { id: 'contacts', label: 'Контакти', href: '/contacts', ready: true },
 ];
 
 export const ANALYSIS_LINK = { href: '/analysis/new', ready: true };

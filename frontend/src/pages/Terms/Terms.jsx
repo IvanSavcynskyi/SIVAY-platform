@@ -112,6 +112,12 @@ export default function Terms() {
           >
             Політика конфіденційності
           </AppLink>
+          <AppLink
+            href="/contacts"
+            className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
+          >
+            Контакти
+          </AppLink>
         </div>
       </header>
 

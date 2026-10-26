@@ -4,6 +4,7 @@ import Home from './pages/Home/Home';
 import NewAnalysis from './pages/NewAnalysis/NewAnalysis';
 import Privacy from './pages/Privacy/Privacy';
 import Terms from './pages/Terms/Terms';
+import Contacts from './pages/Contacts/Contacts';
 import NotFound from './pages/NotFound/NotFound';
 
 const normalize = (pathname) => pathname.replace(/\/+$/, '') || '/';
@@ -40,6 +41,14 @@ export default function App() {
     return (
       <PublicLayout activeLink="none">
         <Terms />
+      </PublicLayout>
+    );
+  }
+
+  if (currentPath === '/contacts') {
+    return (
+      <PublicLayout activeLink="none">
+        <Contacts />
       </PublicLayout>
     );
   }
