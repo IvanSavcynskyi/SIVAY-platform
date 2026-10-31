@@ -12,6 +12,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled])';
 
 export default function Header({ activeLink = 'home' }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
   const menuRef = useRef(null);
@@ -74,6 +76,34 @@ export default function Header({ activeLink = 'home' }) {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+
+    if (isOpen) {
+      setIsVisible(true);
+      lastScrollY.current = currentScrollY;
+      return;
+    }
+
+    if (currentScrollY < 80) {
+      setIsVisible(true);
+    } else if (currentScrollY < lastScrollY.current) {
+      setIsVisible(true);
+    } else if (currentScrollY > lastScrollY.current) {
+      setIsVisible(false);
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, [isOpen]);
+
   const closeMenu = () => setIsOpen(false);
 
   const closeMenuAndReturnFocus = () => {
@@ -115,14 +145,15 @@ export default function Header({ activeLink = 'home' }) {
   };
 
   return (
-    <header className="border-b border-border-main bg-white">
+    <header
+  className={`fixed top-0 left-0 z-[80] w-full border-b border-border-main bg-white transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center justify-between px-4 py-3 md:flex-wrap md:gap-y-4 md:px-8 md:py-5 xl:min-h-[88px] xl:flex-nowrap xl:py-4">
-        <AppLink href="/" className="mr-auto flex items-center gap-3 text-inherit no-underline" aria-label="SIVAY — на головну">
+        <AppLink href="/" className="ml-0 mr-auto flex shrink-0 items-center gap-2.5 text-inherit no-underline md:ml-0 md:gap-3" aria-label="SIVAY — на головну">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#DCFCE7] text-brand-darkest shadow-button md:h-10 md:w-10">
             <Icon name="sprout" size={22} className="md:h-6 md:w-6" />
           </span>
-          <span className="flex flex-col gap-0.5">
-            <span className="text-lg font-semibold leading-[1.2] tracking-[0.4px] text-brand-text md:text-[22px]">SIVAY</span>
+          <span className="translate-y-1 text-[25px] font-semibold leading-none tracking-[0.2px] text-[#315F45] md:translate-y-1.5 md:text-[32px]">
+            SIVAY
           </span>
         </AppLink>
 

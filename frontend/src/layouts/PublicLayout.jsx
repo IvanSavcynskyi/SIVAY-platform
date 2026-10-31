@@ -17,7 +17,7 @@ export default function PublicLayout({ activeLink = 'home', children }) {
               Перейти до основного вмісту
             </a>
             <Header activeLink={activeLink} />
-            <main id="main-content" className="flex-1">
+            <main id="main-content" className="flex-1 pt-[72px] xl:pt-[88px]">
               {children}
             </main>
             <Footer />

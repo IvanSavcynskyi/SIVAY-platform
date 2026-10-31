@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import Button from '../../components/Button/Button';
 import Icon from '../../components/Icon/Icon';
 import { ANALYSIS_LINK } from '../../constants/siteLinks';
@@ -110,6 +111,35 @@ const TONE_CLASSES = {
 };
 
 export default function Home() {
+    const [activeStep, setActiveStep] = useState(0);
+  const [isStepsVisible, setIsStepsVisible] = useState(false);
+  const stepsSectionRef = useRef(null);
+
+  useEffect(() => {
+    const section = stepsSectionRef.current;
+
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsStepsVisible(entry.isIntersecting),
+      { threshold: 0.25 }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isStepsVisible || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const interval = setInterval(() => {
+      setActiveStep((current) => (current + 1) % STEPS.length);
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [isStepsVisible]);
+
   const scrollToWhy = (event) => {
     event.preventDefault();
 
@@ -293,10 +323,17 @@ export default function Home() {
       </section>
 
       {/* Steps section */}
-      <section className="bg-surface-alt py-6 md:py-14 xl:py-[72px]" aria-labelledby="steps-title">
+            
+      <section
+        ref={stepsSectionRef}
+        className="bg-surface-alt py-6 md:py-14 xl:py-[72px]"
+        aria-labelledby="steps-title"
+      >
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3.5 px-4 md:gap-11 md:px-8 xl:px-20">
           <header className="flex flex-col items-center gap-1.5 text-center md:gap-3">
-            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">ПРОСТИЙ ПРОЦЕС</p>
+            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">
+              ПРОСТИЙ ПРОЦЕС
+            </p>
             <h2
               id="steps-title"
               className="m-0 text-2xl font-bold leading-[1.16] tracking-[-0.5px] md:text-4xl md:tracking-[-0.9px] xl:text-[42px]"
@@ -307,8 +344,11 @@ export default function Home() {
               Чотири прості кроки від вибору поля до рекомендації.
             </p>
           </header>
-          <ol className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:flex md:flex-col md:gap-0 xl:flex-row xl:items-stretch">
+
+          <ol className="m-0 grid list-none grid-cols-2 gap-3 p-0 md:flex md:flex-col md:gap-2 xl:flex-row xl:items-stretch xl:gap-3">
             {STEPS.map((step, idx) => {
+              const isActive = activeStep === idx;
+              const isCompleted = idx < activeStep;
               const isFirst = idx === 0;
               const isLast = idx === STEPS.length - 1;
               const isThirdOrFourth = idx >= 2;
@@ -325,40 +365,73 @@ export default function Home() {
                     aria-hidden="true"
                   >
                     <span
-                      className={`hidden xl:flex xl:flex-1 xl:items-center xl:min-w-0 xl:h-0.5 xl:bg-border-main ${
-                        isFirst ? 'xl:invisible' : ''
-                      }`}
+                      className={`hidden h-0.5 min-w-0 flex-1 transition-colors duration-700 xl:flex ${
+                        idx <= activeStep ? 'bg-brand' : 'bg-border-main'
+                      } ${isFirst ? 'xl:invisible' : ''}`}
                     />
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-[15px] font-bold text-brand-darkest shadow-[0_3px_5px_rgba(13,45,32,0.12)] md:h-11 md:w-11 md:text-[19px] md:shadow-[0_5px_7px_rgba(13,45,32,0.12)]">
-                      {step.id}
-                    </span>
+
                     <span
-                      className={`hidden md:flex md:flex-1 md:flex-col md:items-center ${
+                      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[15px] font-bold shadow-[0_3px_5px_rgba(13,45,32,0.12)] transition-all duration-500 md:h-11 md:w-11 md:text-[19px] md:shadow-[0_5px_7px_rgba(13,45,32,0.12)] ${
+                        isActive
+                          ? 'scale-110 bg-brand text-brand-darkest ring-4 ring-brand/15'
+                          : isCompleted
+                            ? 'bg-brand-tint text-brand-dark'
+                            : 'bg-border-main text-muted'
+                      }`}
+                    >
+                      {isCompleted ? <Icon name="check" size={19} /> : step.id}
+                    </span>
+
+                    <span
+                      className={`hidden flex-1 flex-col items-center md:flex ${
                         isLast ? 'md:hidden xl:flex xl:invisible' : ''
                       } xl:flex-row`}
                     >
-                      <span className="w-0.5 flex-1 bg-border-main xl:h-0.5 xl:w-auto" />
+                      <span
+                        className={`w-0.5 flex-1 transition-colors duration-700 xl:h-0.5 xl:w-auto ${
+                          idx < activeStep ? 'bg-brand' : 'bg-border-main'
+                        }`}
+                      />
                       <Icon name="chevron-right" size={20} className="hidden shrink-0 text-muted xl:block" />
                     </span>
                   </div>
 
-                  <article
-                    className={`relative flex flex-1 flex-col gap-2 rounded-2xl p-3.5 pt-14 shadow-[0_5px_7px_rgba(13,45,32,0.06)] transition-[transform,filter,box-shadow] duration-250 ease-out hover:z-[1] hover:scale-[1.04] hover:shadow-[0_8px_20px_rgba(13,45,32,0.14)] hover:brightness-[0.92] ${
-                      isLast
-                        ? 'border-2 border-brand bg-brand-tint md:border-border-soft md:bg-white'
-                        : 'border border-border-soft bg-white'
-                    } md:gap-3.5 md:rounded-[20px] md:p-[22px] md:shadow-card xl:mx-2.5 xl:min-h-[264px]`}
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(idx)}
+                    aria-pressed={isActive}
+                    className={`relative flex w-full flex-1 cursor-pointer flex-col gap-2 rounded-2xl p-3.5 pt-14 text-left transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 md:gap-3.5 md:rounded-[20px] md:p-[22px] xl:mx-2.5 xl:min-h-[264px] ${
+                      isActive
+                        ? 'z-[1] -translate-y-1 border-2 border-brand bg-brand-tint shadow-[0_12px_25px_rgba(13,45,32,0.13)]'
+                        : isCompleted
+                          ? 'border border-brand-soft bg-white shadow-card'
+                          : 'border border-border-soft bg-white shadow-card hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(13,45,32,0.1)]'
+                    }`}
                   >
-                    <span className="absolute top-3.5 right-3.5 grid h-[34px] w-[34px] place-items-center rounded-[10px] border border-brand-soft bg-brand-tint text-brand-dark md:static md:h-12 md:w-12 md:rounded-[14px]">
-                      <Icon name={step.icon} size={18} className="md:h-6 md:w-6" />
+                    <span
+                      className={`absolute top-3.5 right-3.5 grid h-[34px] w-[34px] place-items-center rounded-[10px] transition-all duration-500 md:static md:h-12 md:w-12 md:rounded-[14px] ${
+                        isActive
+                          ? 'scale-110 border border-brand bg-white text-brand-dark'
+                          : 'border border-brand-soft bg-brand-tint text-brand-dark'
+                      }`}
+                    >
+                      <Icon
+                        name={step.icon}
+                        size={18}
+                        className={`transition-transform duration-500 md:h-6 md:w-6 ${
+                          isActive ? 'scale-110' : ''
+                        }`}
+                      />
                     </span>
+
                     <h3 className="m-0 text-[15px] font-bold leading-[1.15] tracking-[-0.2px] md:text-[19px] md:leading-[1.2]">
                       {step.title}
                     </h3>
+
                     <p className="m-0 text-[13px] leading-[1.45] text-muted md:text-base md:leading-[1.5]">
                       {step.text}
                     </p>
-                  </article>
+                  </button>
 
                   {/* Connectors for mobile only */}
                   {idx === 0 && (
@@ -369,6 +442,7 @@ export default function Home() {
                       <Icon name="chevron-right" size={14} />
                     </span>
                   )}
+
                   {isThirdOrFourth && (
                     <span
                       className="absolute -top-[18px] left-1/2 z-[2] -ml-[13px] grid h-[26px] w-[26px] rotate-90 place-items-center rounded-full border border-border-main bg-white text-muted shadow-[0_2px_4px_rgba(13,45,32,0.08)] md:hidden"
