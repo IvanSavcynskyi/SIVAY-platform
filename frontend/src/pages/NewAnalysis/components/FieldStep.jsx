@@ -4,7 +4,8 @@ import { IconCheck, IconPin, IconPolygon, IconSearch, IconShield } from '../../.
 import GoogleMapView from '../../../components/GoogleMap/GoogleMapView';
 import { isMapsConfigured } from '../../../components/GoogleMap/loadGoogleMaps';
 import { DrawPolygonLayer, FieldBoundaryLayer, LocationMarker } from '../../../components/GoogleMap/MapLayers';
-import { createField, listFields } from '../../../services/analysisApi';
+import { createField, getFieldWithPlots, listFields } from '../../../services/fieldsApi';
+import { createField as createFieldLocal } from '../../../services/analysisApi';
 import { geocodePlace } from '../../../services/geocoding';
 import { formatHa } from '../../../utils/format';
 import { isSelfIntersecting, parseCoordinate, pathBounds, polygonAreaHa } from '../../../utils/geo';
@@ -143,8 +144,14 @@ export default function FieldStep({ onFieldReady }) {
       return;
     }
     setSaving(true);
+    setFormError('');
     try {
-      const field = await createField({ name: name.trim(), region: place?.region ?? '', boundary, areaHa: polygonAreaHa(boundary) });
+      const field = await createField({
+        name: name.trim(),
+        region: place?.region ?? '',
+        boundary,
+        areaHa: polygonAreaHa(boundary),
+      });
       onFieldReady(field);
     } catch (error) {
       setFormError(error.message || 'Не вдалося зберегти поле.');
@@ -155,8 +162,24 @@ export default function FieldStep({ onFieldReady }) {
 
   const createDemoField = async () => {
     setSaving(true);
+    setFormError('');
     try {
-      const field = await createField({ name: 'Демо-поле', region: 'Полтавська область', boundary: DEMO_BOUNDARY, areaHa: polygonAreaHa(DEMO_BOUNDARY) });
+      let field;
+      try {
+        field = await createField({
+          name: 'Демо-поле',
+          region: 'Полтавська область',
+          boundary: DEMO_BOUNDARY,
+          areaHa: polygonAreaHa(DEMO_BOUNDARY),
+        });
+      } catch {
+        field = await createFieldLocal({
+          name: 'Демо-поле',
+          region: 'Полтавська область',
+          boundary: DEMO_BOUNDARY,
+          areaHa: polygonAreaHa(DEMO_BOUNDARY),
+        });
+      }
       onFieldReady(field);
     } catch (error) {
       setFormError(error.message || 'Не вдалося створити демо-поле.');
@@ -166,13 +189,28 @@ export default function FieldStep({ onFieldReady }) {
   };
 
   const previewSaved = (fieldId) => {
-    const field = savedFields.find((f) => f.id === fieldId);
+    const field = savedFields.find((f) => String(f.id) === String(fieldId));
     if (!field || !Array.isArray(field.boundary)) return;
     setPreviewField(field);
     setMode('saved');
+    setFormError('');
     const bounds = pathBounds(field.boundary);
     if (bounds) {
       setFocus({ bounds });
+    }
+  };
+
+  const handleUseSavedField = async () => {
+    if (!previewField) return;
+    setSaving(true);
+    setFormError('');
+    try {
+      const fullField = await getFieldWithPlots(previewField.id);
+      onFieldReady(fullField);
+    } catch (error) {
+      setFormError(error.message || 'Не вдалося завантажити ділянки поля.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -289,7 +327,7 @@ export default function FieldStep({ onFieldReady }) {
             </Button>
             {!isMapsConfigured() && (
               <div className="flex flex-col gap-2 rounded-[14px] border border-dashed border-border-main p-3.5">
-                <p className="m-0 text-[13px] leading-[1.5] text-muted">Ключ Google Maps не налаштовано. Щоб переглянути наступні кроки без карти, створіть демо-поле (лише для перегляду, зберігається у вашому браузері).</p>
+                <p className="m-0 text-[13px] leading-[1.5] text-muted">Ключ Google Maps не налаштовано. Щоб переглянути наступні кроки без карти, створіть демо-поле (зберігається в базі або локально).</p>
                 <Button variant="secondary" size="sm" className="w-full" disabled={saving} onClick={createDemoField}>Створити демо-поле (без карти)</Button>
               </div>
             )}
@@ -339,8 +377,11 @@ export default function FieldStep({ onFieldReady }) {
               <h3 className="m-0 text-lg font-bold text-brand-text">{previewField.name}</h3>
               <p className="m-0 mt-1 text-[14px] text-muted">{formatHa(previewField.areaHa)}{previewField.region ? ` · ${previewField.region}` : ''}</p>
             </div>
+            {formError && <InfoNote tone="error">{formError}</InfoNote>}
             <InfoNote tone="success">Межі поля вже збережені й не змінюються. Далі оберіть сезон та ділянки.</InfoNote>
-            <Button className="h-[52px] w-full text-base" arrow onClick={() => onFieldReady(previewField)}>Використати це поле</Button>
+            <Button className="h-[52px] w-full text-base" arrow disabled={saving} onClick={handleUseSavedField}>
+              {saving ? 'Завантажуємо…' : 'Використати це поле'}
+            </Button>
             <LinkButton className="self-start" onClick={cancelDrawing}>Обрати інше місце або поле</LinkButton>
           </>
         )}

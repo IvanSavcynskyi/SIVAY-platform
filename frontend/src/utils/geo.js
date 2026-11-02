@@ -240,3 +240,60 @@ export function parseCoordinate(value, min, max) {
   const n = Number(text.replace(',', '.'));
   return Number.isFinite(n) && n >= min && n <= max ? n : null;
 }
+
+export function pathToGeoJSON(path) {
+  if (!Array.isArray(path) || path.length < 3) {
+    throw new Error('Контур поля повинен містити щонайменше 3 точки.');
+  }
+
+  const valid = path.filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  if (valid.length < 3) {
+    throw new Error('Контур містить некоректні координати.');
+  }
+
+  // GeoJSON Polygon coordinates are [longitude, latitude]
+  const coordinates = valid.map((p) => [Number(p.lng), Number(p.lat)]);
+
+  // Ensure closed ring (first point must equal last point)
+  const first = coordinates[0];
+  const last = coordinates[coordinates.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    coordinates.push([first[0], first[1]]);
+  }
+
+  if (coordinates.length < 4) {
+    throw new Error('Замкнений контур повинен мати щонайменше 4 координати.');
+  }
+
+  return {
+    type: 'Polygon',
+    coordinates: [coordinates],
+  };
+}
+
+export function geoJSONToPath(geom) {
+  if (!geom || typeof geom !== 'object') return [];
+  if (geom.type !== 'Polygon' || !Array.isArray(geom.coordinates) || !Array.isArray(geom.coordinates[0])) {
+    return [];
+  }
+
+  const ring = geom.coordinates[0];
+  if (!Array.isArray(ring) || ring.length === 0) return [];
+
+  // Convert [lng, lat] back to { lat, lng }
+  const points = ring
+    .filter((pt) => Array.isArray(pt) && Number.isFinite(pt[0]) && Number.isFinite(pt[1]))
+    .map((pt) => ({ lat: Number(pt[1]), lng: Number(pt[0]) }));
+
+  if (points.length < 3) return points;
+
+  // In GeoJSON, the first and last points are identical.
+  // For Google Maps paths, remove the duplicate closing point.
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (samePoint(first, last) && points.length > 3) {
+    return points.slice(0, -1);
+  }
+
+  return points;
+}
