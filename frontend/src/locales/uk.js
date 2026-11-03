@@ -1,0 +1,50 @@
+export default {
+  lang: {
+    label: 'Українська',
+    title: 'MOBA / LANGUAGE',
+    selectAria: 'Обрати мову інтерфейсу',
+  },
+  nav: {
+    home: 'Головна',
+    fields: 'Мої поля',
+    analysis: 'Аналіз',
+    history: 'Історія',
+    profile: 'Профіль',
+    communities: 'Для громад',
+  },
+  header: {
+    signIn: 'Увійти',
+    signUp: 'Зареєструватися',
+    signOut: 'Вийти',
+    account: 'Акаунт',
+    openMenu: 'Відкрити меню',
+    closeMenu: 'Закрити меню',
+    loggedInAs: 'Ви увійшли як',
+    loggedOutSuccess: 'Ви успішно вийшли з акаунта.',
+  },
+  footer: {
+    tagline: 'Аналітика, яка допомагає фермерам приймати зважені рішення та підвищувати прибутковість',
+    navigation: 'Навігація',
+    information: 'Інформація',
+    team: 'Наша команда',
+    moreAboutUs: 'Більше про нас',
+    allRightsReserved: 'Усі права захищені.',
+  },
+  infoLinks: {
+    privacy: 'Політика конфіденційності',
+    terms: 'Умови використання',
+    contacts: 'Контакти',
+    team: 'Наша команда',
+  },
+  common: {
+    save: 'Зберегти',
+    cancel: 'Скасувати',
+    back: 'Назад',
+    next: 'Далі',
+    loading: 'Завантаження...',
+    edit: 'Редагувати',
+    delete: 'Видалити',
+    search: 'Пошук',
+  },
+};
+

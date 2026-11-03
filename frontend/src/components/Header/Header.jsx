@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import AppLink from '../AppLink/AppLink';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { useAuth } from '../../context/useAuth';
 import { useNotice } from '../Notice/useNotice';
 import { useAuthModal } from '../AuthModal/useAuthModal';
+import { useLanguage } from '../../context/LanguageContext';
 import { NAV_LINKS } from '../../constants/siteLinks';
 
 const WIDE_SCREEN_QUERY = '(min-width: 768px)';
@@ -20,6 +22,7 @@ export default function Header({ activeLink = 'home' }) {
   const { openAuth } = useAuthModal();
   const { user, isAuthenticated, logout } = useAuth();
   const { showNotice } = useNotice();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,32 +80,32 @@ export default function Header({ activeLink = 'home' }) {
   }, [isOpen]);
 
   useEffect(() => {
-  const handleScroll = () => {
-    const currentScrollY = window.scrollY;
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
 
-    if (isOpen) {
-      setIsVisible(true);
+      if (isOpen) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY < 80) {
+        setIsVisible(true);
+      } else if (currentScrollY < lastScrollY.current) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        setIsVisible(false);
+      }
+
       lastScrollY.current = currentScrollY;
-      return;
-    }
+    };
 
-    if (currentScrollY < 80) {
-      setIsVisible(true);
-    } else if (currentScrollY < lastScrollY.current) {
-      setIsVisible(true);
-    } else if (currentScrollY > lastScrollY.current) {
-      setIsVisible(false);
-    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
-    lastScrollY.current = currentScrollY;
-  };
-
-  window.addEventListener('scroll', handleScroll, { passive: true });
-
-  return () => {
-    window.removeEventListener('scroll', handleScroll);
-  };
-}, [isOpen]);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isOpen]);
 
   const closeMenu = () => setIsOpen(false);
 
@@ -129,8 +132,8 @@ export default function Header({ activeLink = 'home' }) {
   const handleProfile = (event) => {
     if (isAuthenticated) {
       closeMenu();
-      const name = user?.first_name || user?.email?.split('@')[0] || 'користувач';
-      showNotice(`Ви увійшли як ${name} (${user?.email || ''}).`);
+      const name = user?.first_name || user?.email?.split('@')[0] || t('header.account', 'користувач');
+      showNotice(`${t('header.loggedInAs', 'Ви увійшли як')} ${name} (${user?.email || ''}).`);
     } else {
       const returnFocusTo = getReturnFocusTarget(event);
       closeMenu();
@@ -141,14 +144,21 @@ export default function Header({ activeLink = 'home' }) {
   const handleLogout = () => {
     closeMenu();
     logout();
-    showNotice('Ви успішно вийшли з акаунта.');
+    showNotice(t('header.loggedOutSuccess', 'Ви успішно вийшли з акаунта.'));
   };
 
   return (
     <header
-  className={`fixed top-0 left-0 z-[80] w-full border-b border-border-main bg-white transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      className={`fixed top-0 left-0 z-[80] w-full border-b border-border-main bg-white transition-transform duration-300 ease-in-out ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center justify-between px-4 py-3 md:flex-wrap md:gap-y-4 md:px-8 md:py-5 xl:min-h-[88px] xl:flex-nowrap xl:py-4">
-        <AppLink href="/" className="ml-0 mr-auto flex shrink-0 items-center gap-2.5 text-inherit no-underline md:ml-0 md:gap-3" aria-label="SIVAY — на головну">
+        <AppLink
+          href="/"
+          className="ml-0 mr-auto flex shrink-0 items-center gap-2.5 text-inherit no-underline md:ml-0 md:gap-3"
+          aria-label="SIVAY — на головну"
+        >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#DCFCE7] text-brand-darkest shadow-button md:h-10 md:w-10">
             <Icon name="sprout" size={22} className="md:h-6 md:w-6" />
           </span>
@@ -157,19 +167,22 @@ export default function Header({ activeLink = 'home' }) {
           </span>
         </AppLink>
 
-        <button
-          ref={toggleRef}
-          type="button"
-          className="grid h-11 w-11 cursor-pointer place-items-center rounded-xl border border-border-main bg-white text-brand-text md:hidden"
-          aria-label="Відкрити меню"
-          aria-expanded={isOpen}
-          aria-controls="site-menu"
-          onClick={() => setIsOpen(true)}
-        >
-          <Icon name="menu" size={24} />
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <LanguageSwitcher />
+          <button
+            ref={toggleRef}
+            type="button"
+            className="grid h-11 w-11 cursor-pointer place-items-center rounded-xl border border-border-main bg-white text-brand-text"
+            aria-label={t('header.openMenu', 'Відкрити меню')}
+            aria-expanded={isOpen}
+            aria-controls="site-menu"
+            onClick={() => setIsOpen(true)}
+          >
+            <Icon name="menu" size={24} />
+          </button>
+        </div>
 
-        {}
+        {/* Mobile Backdrop */}
         <div
           className={`fixed inset-0 z-[90] bg-[rgba(16,26,36,0.45)] transition-[opacity,visibility] duration-250 ease-out md:hidden ${
             isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0'
@@ -178,7 +191,7 @@ export default function Header({ activeLink = 'home' }) {
           aria-hidden="true"
         />
 
-        {}
+        {/* Navigation & Actions Drawer */}
         <div
           id="site-menu"
           ref={menuRef}
@@ -190,7 +203,7 @@ export default function Header({ activeLink = 'home' }) {
             ref={closeRef}
             type="button"
             className="grid h-10 w-10 shrink-0 cursor-pointer self-end place-items-center rounded-[18px] border border-border-soft bg-[#f7fbf8] text-brand-text md:hidden"
-            aria-label="Закрити меню"
+            aria-label={t('header.closeMenu', 'Закрити меню')}
             onClick={closeMenuAndReturnFocus}
           >
             <Icon name="x" size={20} />
@@ -220,7 +233,7 @@ export default function Header({ activeLink = 'home' }) {
                       onClick={link.id === 'profile' ? handleProfile : closeMenu}
                     >
                       <Icon name={link.icon} size={22} className="shrink-0 md:h-5 md:w-5" />
-                      <span>{link.label}</span>
+                      <span>{t(`nav.${link.id}`, link.label)}</span>
                     </AppLink>
                   </li>
                 );
@@ -228,45 +241,49 @@ export default function Header({ activeLink = 'home' }) {
             </ul>
           </nav>
 
-          {isAuthenticated ? (
-            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
-              <div
-                className="flex items-center gap-2 rounded-xl bg-brand-tint px-3 py-1.5 text-brand-darkest border border-[#bbf7d0]"
-                title={user?.email}
-              >
-                <Icon name="user" size={18} className="text-brand-dark shrink-0" />
-                <span className="truncate text-[14px] font-semibold max-w-[140px]">
-                  {user?.first_name || user?.email?.split('@')[0] || 'Акаунт'}
-                </span>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-11 w-full text-[15px] md:w-auto"
-                onClick={handleLogout}
-              >
-                Вийти
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
-                onClick={handleLogin}
-              >
-                Увійти
-              </Button>
-              <Button
-                size="sm"
-                className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
-                onClick={handleRegister}
-              >
-                Зареєструватися
-              </Button>
-            </div>
-          )}
+          <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+            <LanguageSwitcher className="hidden md:inline-block" />
+
+            {isAuthenticated ? (
+              <>
+                <div
+                  className="flex items-center gap-2 rounded-xl bg-brand-tint px-3 py-1.5 text-brand-darkest border border-[#bbf7d0]"
+                  title={user?.email}
+                >
+                  <Icon name="user" size={18} className="text-brand-dark shrink-0" />
+                  <span className="truncate text-[14px] font-semibold max-w-[140px]">
+                    {user?.first_name || user?.email?.split('@')[0] || t('header.account', 'Акаунт')}
+                  </span>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-11 w-full text-[15px] md:w-auto"
+                  onClick={handleLogout}
+                >
+                  {t('header.signOut', 'Вийти')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
+                  onClick={handleLogin}
+                >
+                  {t('header.signIn', 'Увійти')}
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
+                  onClick={handleRegister}
+                >
+                  {t('header.signUp', 'Зареєструватися')}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

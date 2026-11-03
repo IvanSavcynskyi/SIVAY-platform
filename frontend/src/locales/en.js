@@ -1,0 +1,50 @@
+export default {
+  lang: {
+    label: 'English',
+    title: 'MOBA / LANGUAGE',
+    selectAria: 'Choose interface language',
+  },
+  nav: {
+    home: 'Home',
+    fields: 'My Fields',
+    analysis: 'Analysis',
+    history: 'History',
+    profile: 'Profile',
+    communities: 'For Communities',
+  },
+  header: {
+    signIn: 'Sign in',
+    signUp: 'Sign up',
+    signOut: 'Sign out',
+    account: 'Account',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    loggedInAs: 'You are signed in as',
+    loggedOutSuccess: 'You have successfully signed out.',
+  },
+  footer: {
+    tagline: 'Analytics that helps farmers make sound decisions and increase profitability',
+    navigation: 'Navigation',
+    information: 'Information',
+    team: 'Our Team',
+    moreAboutUs: 'More about us',
+    allRightsReserved: 'All rights reserved.',
+  },
+  infoLinks: {
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Use',
+    contacts: 'Contacts',
+    team: 'Our Team',
+  },
+  common: {
+    save: 'Save',
+    cancel: 'Cancel',
+    back: 'Back',
+    next: 'Next',
+    loading: 'Loading...',
+    edit: 'Edit',
+    delete: 'Delete',
+    search: 'Search',
+  },
+};
+

@@ -1,5 +1,6 @@
 import AppLink from '../AppLink/AppLink';
 import Icon from '../Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 import { ABOUT_LINK, INFO_LINKS, NAV_LINKS } from '../../constants/siteLinks';
 
 const FOOTER_NAV_LINKS = NAV_LINKS.filter((link) => link.id !== 'profile');
@@ -11,6 +12,8 @@ const TEAM_MEMBERS = Array.from({ length: 7 }, (_, index) => ({
 }));
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-white">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 pt-6 pb-3 md:gap-9 md:px-8 md:pt-12 md:pb-7 xl:px-20 xl:pt-14 xl:pb-8">
@@ -25,7 +28,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="m-0 text-[13px] leading-[1.5] text-muted md:text-sm">
-              Аналітика, яка допомагає фермерам приймати зважені рішення та підвищувати прибутковість
+              {t('footer.tagline', 'Аналітика, яка допомагає фермерам приймати зважені рішення та підвищувати прибутковість')}
             </p>
           </section>
 
@@ -33,7 +36,9 @@ export default function Footer() {
 
           <div className="order-3 flex items-start gap-4 md:order-none md:gap-6 xl:gap-8 min-[1440px]:gap-12">
             <nav className="flex min-w-0 flex-[0_0_120px] flex-col gap-2.5 md:flex-initial md:gap-3.5" aria-label="Навігація у футері">
-              <h2 className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark uppercase md:text-[13px]">Навігація</h2>
+              <h2 className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark uppercase md:text-[13px]">
+                {t('footer.navigation', 'Навігація')}
+              </h2>
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0 md:gap-3.5">
                 {FOOTER_NAV_LINKS.map((link) => (
                   <li key={link.id}>
@@ -42,7 +47,7 @@ export default function Footer() {
                       ready={link.ready}
                       className="text-sm font-medium leading-[1.3] text-brand-text no-underline hover:text-brand-dark hover:underline md:text-base"
                     >
-                      {link.label}
+                      {t(`nav.${link.id}`, link.label)}
                     </AppLink>
                   </li>
                 ))}
@@ -52,7 +57,9 @@ export default function Footer() {
             <span className="hidden h-24 w-px shrink-0 self-center bg-[rgba(11,90,62,0.14)] md:block" aria-hidden="true" />
 
             <div className="flex min-w-0 flex-1 flex-col gap-2.5 md:flex-initial md:gap-3.5">
-              <h2 className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark uppercase md:text-[13px]">Інформація</h2>
+              <h2 className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark uppercase md:text-[13px]">
+                {t('footer.information', 'Інформація')}
+              </h2>
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0 md:gap-3.5">
                 {INFO_LINKS.map((link) => (
                   <li key={link.id}>
@@ -61,7 +68,7 @@ export default function Footer() {
                       ready={link.ready}
                       className="text-sm font-medium leading-[1.3] text-brand-text no-underline hover:text-brand-dark hover:underline md:text-base"
                     >
-                      {link.label}
+                      {t(`infoLinks.${link.id}`, link.label)}
                     </AppLink>
                   </li>
                 ))}
@@ -76,7 +83,7 @@ export default function Footer() {
             aria-labelledby="footer-team-title"
           >
             <h2 id="footer-team-title" className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark uppercase md:row-span-2 md:text-[13px] xl:row-auto">
-              Наша команда
+              {t('footer.team', 'Наша команда')}
             </h2>
             <ul className="m-0 grid list-none grid-cols-7 justify-between gap-2 p-0 md:col-start-2 md:grid-cols-[repeat(7,48px)] md:justify-self-end md:gap-3 xl:col-auto xl:grid-cols-[repeat(4,56px)] xl:justify-start">
               {TEAM_MEMBERS.map((member) => (
@@ -103,7 +110,7 @@ export default function Footer() {
               href={ABOUT_LINK.href}
               ready={ABOUT_LINK.ready}
               className="grid h-8 w-8 place-items-center self-end rounded-full border border-[rgba(11,90,62,0.35)] text-brand-dark no-underline transition-colors hover:bg-brand-soft md:col-start-2 md:justify-self-end xl:col-auto xl:self-end"
-              aria-label="Про нас: дізнатися більше про команду"
+              aria-label={t('footer.moreAboutUs', 'Більше про нас')}
             >
               <Icon name="arrow-right" size={16} />
             </AppLink>
@@ -111,7 +118,9 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border-soft pt-2 md:pt-5">
-          <p className="m-0 text-xs text-muted md:text-sm">© 2026 SIVAY. Усі права захищені.</p>
+          <p className="m-0 text-xs text-muted md:text-sm">
+            {t('footer.allRightsReserved', '© 2026 SIVAY. Усі права захищені.')}
+          </p>
         </div>
       </div>
     </footer>
