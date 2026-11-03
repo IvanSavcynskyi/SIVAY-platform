@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react';
 import AppLink from '../../components/AppLink/AppLink';
 import Button from '../../components/Button/Button';
 import Icon from '../../components/Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SECTIONS = [
-  { id: 'general', title: '1. Загальні положення та володілець даних' },
-  { id: 'data-collected', title: '2. Які дані ми збираємо' },
-  { id: 'purposes', title: '3. Мета обробки даних' },
-  { id: 'geo-confidentiality', title: '4. Захист геоданих та комерційної таємниці' },
-  { id: 'third-parties', title: '5. Передача даних третім сторонам' },
-  { id: 'security', title: '6. Безпека та термін зберігання' },
-  { id: 'user-rights', title: '7. Ваші права щодо персональних даних' },
-  { id: 'cookies', title: '8. Використання файлів cookie' },
-  { id: 'contacts', title: '9. Зміни до політики та контакти' },
+  { id: 'general', key: 'general', title: '1. Загальні положення та володілець даних' },
+  { id: 'data-collected', key: 'dataCollected', title: '2. Які дані ми збираємо' },
+  { id: 'purposes', key: 'purposes', title: '3. Мета обробки даних' },
+  { id: 'geo-confidentiality', key: 'geoConfidentiality', title: '4. Захист геоданих та комерційної таємниці' },
+  { id: 'third-parties', key: 'thirdParties', title: '5. Передача даних третім сторонам' },
+  { id: 'security', key: 'security', title: '6. Безпека та термін зберігання' },
+  { id: 'user-rights', key: 'userRights', title: '7. Ваші права щодо персональних даних' },
+  { id: 'cookies', key: 'cookies', title: '8. Використання файлів cookie' },
+  { id: 'contacts', key: 'contacts', title: '9. Зміни до політики та контакти' },
 ];
 
 export default function Privacy() {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState('general');
 
   useEffect(() => {
@@ -70,32 +72,31 @@ export default function Privacy() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-16 md:px-8 md:pt-10 md:pb-24 xl:px-20">
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Хлібні крихти" className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
+      <nav aria-label={t('common.breadcrumbAria', 'Хлібні крихти')} className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
         <AppLink href="/" className="transition-colors hover:text-brand-dark">
-          Головна
+          {t('nav.home', 'Головна')}
         </AppLink>
         <Icon name="chevron-right" size={14} className="text-muted/60" />
-        <span className="text-brand-text">Політика конфіденційності</span>
+        <span className="text-brand-text">{t('privacyPage.breadcrumb', 'Політика конфіденційності')}</span>
       </nav>
 
       {/* Header Banner */}
       <header className="mb-8 flex flex-col gap-3 rounded-2xl border border-border-main bg-gradient-to-br from-brand-tint via-white to-surface-panel p-6 shadow-sm md:mb-12 md:rounded-[24px] md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[12px] font-bold tracking-wider text-brand-dark uppercase">
-            <Icon name="check-circle" size={14} /> Безпека та конфіденційність
+            <Icon name="check-circle" size={14} /> {t('privacyPage.badge', 'Безпека та конфіденційність')}
           </span>
           <span className="text-xs font-semibold text-muted">
-            Редакція від 26 жовтня 2026 р.
+            {t('privacyPage.effectiveDate', 'Редакція від 26 жовтня 2026 р.')}
           </span>
         </div>
 
         <h1 className="m-0 text-2xl font-bold leading-[1.15] text-brand-text md:text-4xl xl:text-[44px]">
-          Політика конфіденційності SIVAY
+          {t('privacyPage.title', 'Політика конфіденційності SIVAY')}
         </h1>
 
         <p className="m-0 max-w-[820px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
-          Ми поважаємо вашу приватність і прагнемо захищати ваші персональні дані та агрономічну інформацію. 
-          У цій Політиці описано, які дані ми збираємо, як їх використовуємо та як забезпечуємо безпеку ваших полів.
+          {t('privacyPage.description', 'Ми поважаємо вашу приватність і прагнемо захищати ваші персональні дані та агрономічну інформацію. У цій Політиці описано, які дані ми збираємо, як їх використовуємо та як забезпечуємо безпеку ваших полів.')}
         </p>
 
         {/* Quick Page Switcher */}
@@ -104,19 +105,19 @@ export default function Privacy() {
             href="/privacy"
             className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-brand-darkest shadow-sm"
           >
-            Політика конфіденційності
+            {t('infoLinks.privacy', 'Політика конфіденційності')}
           </AppLink>
           <AppLink
             href="/terms"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Умови використання
+            {t('infoLinks.terms', 'Умови використання')}
           </AppLink>
           <AppLink
             href="/contacts"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Контакти
+            {t('infoLinks.contacts', 'Контакти')}
           </AppLink>
         </div>
       </header>
@@ -128,9 +129,9 @@ export default function Privacy() {
           <div className="sticky top-24 flex flex-col gap-6">
             <div className="rounded-2xl border border-border-main bg-white p-5 shadow-sm">
               <h2 className="m-0 mb-3 text-xs font-bold tracking-wider text-brand-dark uppercase">
-                Зміст документа
+                {t('privacyPage.tocTitle', 'Зміст документа')}
               </h2>
-              <nav aria-label="Розділи політики" className="flex flex-col gap-1">
+              <nav aria-label={t('privacyPage.sidebarAria', 'Розділи політики')} className="flex flex-col gap-1">
                 {SECTIONS.map((sec) => (
                   <button
                     key={sec.id}
@@ -142,7 +143,7 @@ export default function Privacy() {
                         : 'text-muted hover:bg-surface-alt hover:text-brand-text'
                     }`}
                   >
-                    {sec.title}
+                    {t(`privacyPage.sections.${sec.key}`, sec.title)}
                   </button>
                 ))}
               </nav>
@@ -153,10 +154,10 @@ export default function Privacy() {
                 <Icon name="lock-keyhole" size={20} />
               </span>
               <h3 className="m-0 text-base font-bold text-brand-text">
-                Захист персональних даних
+                {t('privacyPage.sections.geoConfidentiality', 'Захист персональних даних')}
               </h3>
               <p className="mt-1.5 mb-4 text-[13px] leading-[1.5] text-muted">
-                Ви можете в будь-який момент отримати копію своїх даних або надіслати запит на їх повне видалення.
+                {t('privacyPage.ctaSubtitle', 'Ви можете в будь-який момент отримати копію своїх даних або надіслати запит на їх повне видалення.')}
               </p>
               <a
                 href="mailto:privacy@sivay.com.ua"
@@ -173,7 +174,7 @@ export default function Privacy() {
           {/* Section 1 */}
           <section id="general" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              1. Загальні положення та володілець даних
+              {t('privacyPage.sections.general', '1. Загальні положення та володілець даних')}
             </h2>
             <p className="mb-3">
               1.1. Ця Політика конфіденційності регулює порядок збирання, використання, зберігання та захисту персональних та геопросторових даних користувачів платформи <strong>SIVAY</strong>.
@@ -189,7 +190,7 @@ export default function Privacy() {
           {/* Section 2 */}
           <section id="data-collected" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              2. Які дані ми збираємо
+              {t('privacyPage.sections.dataCollected', '2. Які дані ми збираємо')}
             </h2>
             <p className="mb-3">Для надання сервісів платформи SIVAY ми можемо обробляти такі категорії даних:</p>
             <div className="space-y-4">
@@ -219,7 +220,7 @@ export default function Privacy() {
           {/* Section 3 */}
           <section id="purposes" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              3. Мета обробки даних
+              {t('privacyPage.sections.purposes', '3. Мета обробки даних')}
             </h2>
             <p className="mb-3">Ми використовуємо зібрану інформацію виключно для таких цілей:</p>
             <ul className="list-disc pl-5 space-y-2 text-muted">
@@ -234,7 +235,7 @@ export default function Privacy() {
           {/* Section 4 */}
           <section id="geo-confidentiality" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              4. Захист геоданих та комерційної таємниці
+              {t('privacyPage.sections.geoConfidentiality', '4. Захист геоданих та комерційної таємниці')}
             </h2>
             <div className="mb-4 rounded-xl border border-brand-soft bg-brand-tint p-4 text-[14px] leading-relaxed text-brand-dark">
               <strong>Гарантія конфіденційності полів:</strong> SIVAY суворо дотримується принципу збереження комерційної таємниці в агросекторі. 
@@ -248,7 +249,7 @@ export default function Privacy() {
           {/* Section 5 */}
           <section id="third-parties" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              5. Передача даних третім сторонам
+              {t('privacyPage.sections.thirdParties', '5. Передача даних третім сторонам')}
             </h2>
             <p className="mb-3">
               5.1. Ми <strong>не продаємо</strong> та не передаємо персональні дані комерційним рекламним мережам чи стороннім брокерам даних.
@@ -269,7 +270,7 @@ export default function Privacy() {
           {/* Section 6 */}
           <section id="security" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              6. Безпека та термін зберігання
+              {t('privacyPage.sections.security', '6. Безпека та термін зберігання')}
             </h2>
             <p className="mb-3">
               6.1. Ми застосовуємо багаторівневі організаційні та технічні заходи захисту інформації:
@@ -288,7 +289,7 @@ export default function Privacy() {
           {/* Section 7 */}
           <section id="user-rights" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              7. Ваші права щодо персональних даних
+              {t('privacyPage.sections.userRights', '7. Ваші права щодо персональних даних')}
             </h2>
             <p className="mb-3">Відповідно до законодавства України ви маєте право:</p>
             <ul className="list-disc pl-5 space-y-1.5 text-muted">
@@ -303,7 +304,7 @@ export default function Privacy() {
           {/* Section 8 */}
           <section id="cookies" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              8. Використання файлів cookie
+              {t('privacyPage.sections.cookies', '8. Використання файлів cookie')}
             </h2>
             <p className="mb-3">
               8.1. Платформа використовує технічні файли cookie та локальне сховище браузера (localStorage) для забезпечення автентифікації користувача та збереження поточного стану інтерфейсу під час роботи з картою.
@@ -316,7 +317,7 @@ export default function Privacy() {
           {/* Section 9 */}
           <section id="contacts" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              9. Зміни до політики та контакти
+              {t('privacyPage.sections.contacts', '9. Зміни до політики та контакти')}
             </h2>
             <p className="mb-3">
               9.1. Ми залишаємо за собою право вносити зміни до цієї Політики у разі зміни законодавства чи розширення функцій сервісу. Нова редакція публікується на цій сторінці.
@@ -333,10 +334,10 @@ export default function Privacy() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Button href="/" variant="secondary" arrow>
-                На головну сторінку
+                {t('privacyPage.backHome', 'На головну сторінку')}
               </Button>
               <Button href="/terms">
-                Переглянути Умови використання
+                {t('infoLinks.terms', 'Переглянути Умови використання')}
               </Button>
             </div>
           </section>
@@ -345,4 +346,3 @@ export default function Privacy() {
     </div>
   );
 }
-

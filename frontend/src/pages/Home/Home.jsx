@@ -1,106 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../../components/Button/Button';
 import Icon from '../../components/Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 import { ANALYSIS_LINK } from '../../constants/siteLinks';
-
-const AUDIENCE_POINTS = [
-  'Для фермерів та господарств',
-  'Зрозуміла рекомендація замість складних таблиць',
-  'Дані про ґрунт, погоду та ринок в одному місці',
-];
-
-const VALUE_CARDS = [
-  {
-    id: 'field',
-    title: 'Для конкретного поля',
-    text: 'Рекомендації враховують особливості саме вашої ділянки.',
-    icon: 'value_card_1',
-  },
-  {
-    id: 'complex',
-    title: 'Комплексний аналіз',
-    text: 'Поєднуємо дані про поле, погоду, ринок та логістику.',
-    icon: 'value_card_2',
-  },
-  {
-    id: 'result',
-    title: 'Зрозумілий результат',
-    text: 'Ви отримуєте просту рекомендацію замість складних наборів даних.',
-    icon: 'value_card_3',
-  },
-  {
-    id: 'data',
-    title: 'На основі актуальних даних',
-    text: 'Система враховує поточні умови сезону та ринку.',
-    icon: 'value_card_4',
-  },
-];
-
-const BENEFIT_CARDS = [
-  {
-    id: 'soil',
-    title: 'Стан ґрунту',
-    text: 'Оцінюємо стан поля за супутниковими даними.',
-    icon: 'satellite',
-    tone: 'sand',
-  },
-  {
-    id: 'climate',
-    title: 'Клімат',
-    text: 'Враховуємо прогнозований клімат вашого регіону.',
-    icon: 'cloud-sun',
-    tone: 'sky',
-  },
-  {
-    id: 'previous',
-    title: 'Попередні культури',
-    text: 'Враховуємо культури, які вирощувалися на полі раніше.',
-    icon: 'wheat',
-    tone: 'sun',
-  },
-  {
-    id: 'prices',
-    title: 'Ринкові ціни',
-    text: 'Аналізуємо актуальні ціни та ринкові тенденції.',
-    icon: 'trending-up',
-    tone: 'peach',
-  },
-];
-
-const STEPS = [
-  {
-    id: 1,
-    title: 'Додайте поле',
-    text: 'Вкажіть своє поле, попередні культури та культури, які розглядаєте для посіву.',
-    icon: 'map-pin',
-  },
-  {
-    id: 2,
-    title: 'Аналізуємо дані',
-    text: 'Система обробляє супутникові, погодні та історичні дані.',
-    icon: 'satellite',
-  },
-  {
-    id: 3,
-    title: 'Порівнюємо культури',
-    text: 'Оцінюємо потенціал культур з урахуванням урожайності та ринкових умов.',
-    icon: 'chart',
-  },
-  {
-    id: 4,
-    title: 'Отримайте рекомендацію',
-    text: 'SIVAY формує рейтинг найперспективніших культур для вашого поля.',
-    icon: 'check-circle',
-  },
-];
-
-const RANKING = [
-  { id: 'sunflower', name: 'Соняшник', note: 'Найвищий потенціал', icon: 'sun', tone: 'peach', score: 100 },
-  { id: 'soy', name: 'Соя', note: 'Висока перспективність', icon: 'sprout', tone: 'tint', score: 88 },
-  { id: 'corn', name: 'Кукурудза', note: 'Стабільний прогноз', icon: 'leaf', tone: 'sky', score: 76 },
-  { id: 'wheat', name: 'Пшениця', note: 'Сприятливі умови', icon: 'wheat', tone: 'sun', score: 66 },
-  { id: 'potato', name: 'Картопля', note: 'Перспективний варіант', icon: 'circle-dot', tone: 'sand', score: 56 },
-];
 
 const TONE_CLASSES = {
   sand: 'bg-sand',
@@ -111,18 +13,117 @@ const TONE_CLASSES = {
 };
 
 export default function Home() {
-    const [activeStep, setActiveStep] = useState(0);
+  const { t } = useLanguage();
+  const [activeStep, setActiveStep] = useState(0);
   const [isStepsVisible, setIsStepsVisible] = useState(false);
   const stepsSectionRef = useRef(null);
 
+  const audiencePoints = [
+    t('home.audience.0', 'Для фермерів та господарств'),
+    t('home.audience.1', 'Зрозуміла рекомендація замість складних таблиць'),
+    t('home.audience.2', 'Дані про ґрунт, погоду та ринок в одному місці'),
+  ];
+
+  const valueCards = [
+    {
+      id: 'field',
+      title: t('home.values.field.title', 'Для конкретного поля'),
+      text: t('home.values.field.text', 'Рекомендації враховують особливості саме вашої ділянки.'),
+      icon: 'value_card_1',
+    },
+    {
+      id: 'complex',
+      title: t('home.values.complex.title', 'Комплексний аналіз'),
+      text: t('home.values.complex.text', 'Поєднуємо дані про поле, погоду, ринок та логістику.'),
+      icon: 'value_card_2',
+    },
+    {
+      id: 'result',
+      title: t('home.values.result.title', 'Зрозумілий результат'),
+      text: t('home.values.result.text', 'Ви отримуєте просту рекомендацію замість складних наборів даних.'),
+      icon: 'value_card_3',
+    },
+    {
+      id: 'data',
+      title: t('home.values.data.title', 'На основі актуальних даних'),
+      text: t('home.values.data.text', 'Система враховує поточні умови сезону та ринку.'),
+      icon: 'value_card_4',
+    },
+  ];
+
+  const benefitCards = [
+    {
+      id: 'soil',
+      title: t('home.benefits.soil.title', 'Стан ґрунту'),
+      text: t('home.benefits.soil.text', 'Оцінюємо стан поля за супутниковими даними.'),
+      icon: 'satellite',
+      tone: 'sand',
+    },
+    {
+      id: 'climate',
+      title: t('home.benefits.climate.title', 'Клімат'),
+      text: t('home.benefits.climate.text', 'Враховуємо прогнозований клімат вашого регіону.'),
+      icon: 'cloud-sun',
+      tone: 'sky',
+    },
+    {
+      id: 'previous',
+      title: t('home.benefits.previous.title', 'Попередні культури'),
+      text: t('home.benefits.previous.text', 'Враховуємо культури, які вирощувалися на полі раніше.'),
+      icon: 'wheat',
+      tone: 'sun',
+    },
+    {
+      id: 'prices',
+      title: t('home.benefits.prices.title', 'Ринкові ціни'),
+      text: t('home.benefits.prices.text', 'Аналізуємо актуальні ціни та ринкові тенденції.'),
+      icon: 'trending-up',
+      tone: 'peach',
+    },
+  ];
+
+  const steps = [
+    {
+      id: 1,
+      title: t('home.steps.1.title', 'Додайте поле'),
+      text: t('home.steps.1.text', 'Вкажіть своє поле, попередні культури та культури, які розглядаєте для посіву.'),
+      icon: 'map-pin',
+    },
+    {
+      id: 2,
+      title: t('home.steps.2.title', 'Аналізуємо дані'),
+      text: t('home.steps.2.text', 'Система обробляє супутникові, погодні та історичні дані.'),
+      icon: 'satellite',
+    },
+    {
+      id: 3,
+      title: t('home.steps.3.title', 'Порівнюємо культури'),
+      text: t('home.steps.3.text', 'Оцінюємо потенціал культур з урахуванням урожайності та ринкових умов.'),
+      icon: 'chart',
+    },
+    {
+      id: 4,
+      title: t('home.steps.4.title', 'Отримайте рекомендацію'),
+      text: t('home.steps.4.text', 'SIVAY формує рейтинг найперспективніших культур для вашого поля.'),
+      icon: 'check-circle',
+    },
+  ];
+
+  const ranking = [
+    { id: 'sunflower', name: t('home.crops.sunflower', 'Соняшник'), note: t('home.crops.sunflowerNote', 'Найвищий потенціал'), icon: 'sun', tone: 'peach', score: 100 },
+    { id: 'soy', name: t('home.crops.soy', 'Соя'), note: t('home.crops.soyNote', 'Висока перспективність'), icon: 'sprout', tone: 'tint', score: 88 },
+    { id: 'corn', name: t('home.crops.corn', 'Кукурудза'), note: t('home.crops.cornNote', 'Стабільний прогноз'), icon: 'leaf', tone: 'sky', score: 76 },
+    { id: 'wheat', name: t('home.crops.wheat', 'Пшениця'), note: t('home.crops.wheatNote', 'Сприятливі умови'), icon: 'wheat', tone: 'sun', score: 66 },
+    { id: 'potato', name: t('home.crops.potato', 'Картопля'), note: t('home.crops.potatoNote', 'Перспективний варіант'), icon: 'circle-dot', tone: 'sand', score: 56 },
+  ];
+
   useEffect(() => {
     const section = stepsSectionRef.current;
-
     if (!section) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => setIsStepsVisible(entry.isIntersecting),
-      { threshold: 0.25 }
+      { threshold: 0.25 },
     );
 
     observer.observe(section);
@@ -134,11 +135,11 @@ export default function Home() {
     if (!isStepsVisible || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const interval = setInterval(() => {
-      setActiveStep((current) => (current + 1) % STEPS.length);
+      setActiveStep((current) => (current + 1) % steps.length);
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [isStepsVisible]);
+  }, [isStepsVisible, steps.length]);
 
   const scrollToWhy = (event) => {
     event.preventDefault();
@@ -162,11 +163,10 @@ export default function Home() {
               id="hero-title"
               className="m-0 text-[28px] font-bold leading-[1.12] tracking-[-0.7px] md:text-[46px] md:tracking-[-1.4px] xl:text-[54px]"
             >
-              Обирайте найперспективнішу культуру для свого поля
+              {t('home.heroTitle', 'Обирайте найперспективнішу культуру для свого поля')}
             </h1>
             <p className="m-0 text-[15px] leading-[1.48] md:text-[19px] md:leading-[1.55]">
-              SIVAY аналізує стан ґрунту, погодні умови, попередні культури, ринкові ціни та
-              логістичні витрати, щоб допомогти вам прийняти обґрунтоване рішення щодо посіву.
+              {t('home.heroSubtitle', 'SIVAY аналізує стан ґрунту, погодні умови, попередні культури, ринкові ціни та логістичні витрати, щоб допомогти вам прийняти обґрунтоване рішення щодо посіву.')}
             </p>
             <div className="flex w-full gap-2.5 md:w-auto md:gap-3.5">
               <Button
@@ -175,7 +175,7 @@ export default function Home() {
                 arrow
                 className="h-auto min-h-12 w-full flex-1 whitespace-normal px-3 py-2 text-center text-[15px] md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px] [&_svg]:hidden md:[&_svg]:block"
               >
-                Перейти до аналізу
+                {t('home.ctaPrimary', 'Перейти до аналізу')}
               </Button>
               <Button
                 variant="secondary"
@@ -183,11 +183,11 @@ export default function Home() {
                 onClick={scrollToWhy}
                 className="h-auto min-h-12 w-full flex-1 whitespace-normal px-3 py-2 text-center text-[15px] md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px]"
               >
-                Дізнатися більше
+                {t('home.ctaSecondary', 'Дізнатися більше')}
               </Button>
             </div>
             <ul className="m-0 flex list-none flex-col gap-1.5 p-0 md:gap-2.5">
-              {AUDIENCE_POINTS.map((point) => (
+              {audiencePoints.map((point) => (
                 <li key={point} className="flex items-center gap-2 text-sm font-medium md:gap-2.5 md:text-base">
                   <Icon name="check-circle" size={18} className="shrink-0 text-brand md:h-5 md:w-5" />
                   <span>{point}</span>
@@ -202,16 +202,18 @@ export default function Home() {
       <section id="why-sivay" className="bg-surface-alt py-6 md:py-14 xl:py-[72px]" aria-labelledby="why-title">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3.5 px-4 md:gap-10 md:px-8 xl:px-20">
           <header className="flex flex-col items-center gap-1.5 text-center md:gap-3">
-            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">ПЕРЕВАГИ</p>
+            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">
+              {t('home.whyBadge', 'ПЕРЕВАГИ')}
+            </p>
             <h2
               id="why-title"
               className="m-0 text-2xl font-bold leading-[1.16] tracking-[-0.5px] md:text-4xl md:tracking-[-0.9px] xl:text-[42px]"
             >
-              Чому SIVAY
+              {t('home.whyTitle', 'Чому SIVAY')}
             </h2>
           </header>
           <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:gap-4 xl:grid-cols-4 xl:gap-5">
-            {VALUE_CARDS.map((card) => (
+            {valueCards.map((card) => (
               <li
                 key={card.id}
                 className="flex flex-col items-start gap-2 rounded-2xl border border-brand-soft bg-brand-tint p-3.5 transition-[transform,filter,box-shadow] duration-250 ease-out hover:z-[1] hover:scale-[1.04] hover:shadow-[0_8px_20px_rgba(13,45,32,0.14)] hover:brightness-[0.92] md:gap-3.5 md:rounded-[20px] md:p-6"
@@ -267,10 +269,10 @@ export default function Home() {
               id="cta-title"
               className="relative m-0 max-w-[900px] text-2xl font-bold leading-[1.14] tracking-[-0.5px] text-white md:text-[38px] md:tracking-[-1px] xl:text-[46px]"
             >
-              Дізнайтеся, яка культура найперспективніша для вашого поля
+              {t('home.ctaBannerTitle', 'Дізнайтеся, яка культура найперспективніша для вашого поля')}
             </h2>
             <p className="relative m-0 text-[15px] leading-[1.48] text-brand-soft md:text-xl md:leading-[1.5]">
-              Приймайте рішення на основі даних, а не припущень.
+              {t('home.ctaBannerSubtitle', 'Приймайте рішення на основі даних, а не припущень.')}
             </p>
             <Button
               href={ANALYSIS_LINK.href}
@@ -278,7 +280,7 @@ export default function Home() {
               arrow
               className="relative h-[50px] w-full text-[15px] md:h-14 md:w-auto md:text-[17px] [&_svg]:h-4 [&_svg]:w-4 md:[&_svg]:h-5 md:[&_svg]:w-5"
             >
-              Почати аналіз
+              {t('home.ctaBannerBtn', 'Почати аналіз')}
             </Button>
           </div>
         </div>
@@ -288,19 +290,21 @@ export default function Home() {
       <section className="bg-surface-alt py-6 md:py-14 xl:py-[72px]" aria-labelledby="benefits-title">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3.5 px-4 md:gap-10 md:px-8 xl:px-20">
           <header className="flex flex-col items-center gap-1.5 text-center md:gap-3">
-            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">ЩО ВРАХОВУЄ SIVAY</p>
+            <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">
+              {t('home.benefitsBadge', 'ЩО ВРАХОВУЄ SIVAY')}
+            </p>
             <h2
               id="benefits-title"
               className="m-0 text-2xl font-bold leading-[1.16] tracking-[-0.5px] md:text-4xl md:tracking-[-0.9px] xl:text-[42px]"
             >
-              Рішення на основі даних
+              {t('home.benefitsTitle', 'Рішення на основі даних')}
             </h2>
             <p className="m-0 hidden text-lg leading-[1.5] text-muted md:block">
-              Чотири ключові чинники, які SIVAY бере до уваги для вашого поля.
+              {t('home.benefitsSubtitle', 'Чотири ключові чинники, які SIVAY бере до уваги для вашого поля.')}
             </p>
           </header>
           <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:gap-4 xl:grid-cols-4 xl:gap-5">
-            {BENEFIT_CARDS.map((card) => (
+            {benefitCards.map((card) => (
               <li
                 key={card.id}
                 className={`flex flex-col items-start gap-2.5 rounded-2xl border border-border-soft p-3.5 shadow-[0_5px_7px_rgba(13,45,32,0.06)] transition-[transform,filter,box-shadow] duration-250 ease-out hover:z-[1] hover:scale-[1.04] hover:shadow-[0_8px_20px_rgba(13,45,32,0.14)] hover:brightness-[0.92] md:gap-4 md:rounded-[20px] md:p-6 md:shadow-card ${
@@ -323,7 +327,6 @@ export default function Home() {
       </section>
 
       {/* Steps section */}
-            
       <section
         ref={stepsSectionRef}
         className="bg-surface-alt py-6 md:py-14 xl:py-[72px]"
@@ -332,25 +335,25 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3.5 px-4 md:gap-11 md:px-8 xl:px-20">
           <header className="flex flex-col items-center gap-1.5 text-center md:gap-3">
             <p className="m-0 text-xs font-bold tracking-[0.8px] text-brand-dark md:text-[13px]">
-              ПРОСТИЙ ПРОЦЕС
+              {t('home.stepsBadge', 'ПРОСТИЙ ПРОЦЕС')}
             </p>
             <h2
               id="steps-title"
               className="m-0 text-2xl font-bold leading-[1.16] tracking-[-0.5px] md:text-4xl md:tracking-[-0.9px] xl:text-[42px]"
             >
-              Як працює SIVAY
+              {t('home.stepsTitle', 'Як працює SIVAY')}
             </h2>
             <p className="m-0 hidden text-lg leading-[1.5] text-muted md:block">
-              Чотири прості кроки від вибору поля до рекомендації.
+              {t('home.stepsSubtitle', 'Чотири прості кроки від вибору поля до рекомендації.')}
             </p>
           </header>
 
           <ol className="m-0 grid list-none grid-cols-2 gap-3 p-0 md:flex md:flex-col md:gap-2 xl:flex-row xl:items-stretch xl:gap-3">
-            {STEPS.map((step, idx) => {
+            {steps.map((step, idx) => {
               const isActive = activeStep === idx;
               const isCompleted = idx < activeStep;
               const isFirst = idx === 0;
-              const isLast = idx === STEPS.length - 1;
+              const isLast = idx === steps.length - 1;
               const isThirdOrFourth = idx >= 2;
 
               return (
@@ -468,17 +471,16 @@ export default function Home() {
             />
             <div className="contents md:flex md:flex-col md:items-start md:gap-[18px] xl:min-w-[300px] xl:flex-[0_1_400px]">
               <p className="relative m-0 mb-1.5 text-xs font-bold tracking-[0.8px] text-brand-dark md:m-0 md:text-[13px]">
-                РЕЗУЛЬТАТ
+                {t('home.previewBadge', 'РЕЗУЛЬТАТ')}
               </p>
               <h2
                 id="preview-title"
                 className="relative m-0 mb-1.5 text-2xl font-bold leading-[1.16] tracking-[-0.5px] md:m-0 md:text-4xl md:tracking-[-0.9px] xl:text-[42px]"
               >
-                Ваш результат
+                {t('home.previewTitle', 'Ваш результат')}
               </h2>
               <p className="relative m-0 mb-3 text-sm leading-[1.48] text-muted md:m-0 md:text-lg md:leading-[1.5]">
-                Отримайте зрозумілий рейтинг культур, які найбільше відповідають умовам вашого поля
-                та поточного сезону.
+                {t('home.previewSubtitle', 'Отримайте зрозумілий рейтинг культур, які найбільше відповідають умовам вашого поля та поточного сезону.')}
               </p>
               <Button
                 href={ANALYSIS_LINK.href}
@@ -486,7 +488,7 @@ export default function Home() {
                 arrow
                 className="relative order-2 h-12 w-full text-[15px] md:order-none md:h-14 md:w-auto md:text-[17px] [&_svg]:h-4 [&_svg]:w-4 md:[&_svg]:h-5 md:[&_svg]:w-5"
               >
-                Провести аналіз поля
+                {t('home.previewBtn', 'Провести аналіз поля')}
               </Button>
             </div>
 
@@ -497,20 +499,24 @@ export default function Home() {
                     <Icon name="map-pin" size={16} className="md:h-5 md:w-5" />
                   </span>
                   <div>
-                    <p className="m-0 text-sm font-bold leading-[1.2] md:text-base">Результат аналізу</p>
-                    <p className="m-0 text-xs font-medium text-muted md:text-[13px]">Поле №3 — Південне · 24,6 га</p>
+                    <p className="m-0 text-sm font-bold leading-[1.2] md:text-base">
+                      {t('home.previewCardHeader', 'Результат аналізу')}
+                    </p>
+                    <p className="m-0 text-xs font-medium text-muted md:text-[13px]">
+                      {t('home.previewCardField', 'Поле №3 — Південне · 24,6 га')}
+                    </p>
                   </div>
                 </div>
                 <span className="shrink-0 rounded-full border border-border-main bg-white px-2.5 py-[3px] text-xs font-semibold text-brand-dark md:px-3 md:py-1 md:text-[13px]">
-                  Приклад
+                  {t('home.previewCardBadge', 'Приклад')}
                 </span>
               </div>
               <div className="md:flex md:flex-col md:gap-2.5 md:p-5">
                 <p className="m-0 p-2.5 px-3 pb-0.5 text-xs font-semibold text-muted md:p-0 md:text-sm">
-                  Топ-5 культур для вашого поля
+                  {t('home.previewTopCrops', 'Топ-5 культур для вашого поля')}
                 </p>
                 <ol className="m-0 list-none p-0 md:flex md:flex-col md:gap-2.5">
-                  {RANKING.map((item, index) => {
+                  {ranking.map((item, index) => {
                     const isTop = index === 0;
 
                     return (
@@ -560,7 +566,7 @@ export default function Home() {
               </div>
               <figcaption className="flex items-center gap-1.5 border-t border-border-soft bg-surface-panel p-2 px-3 text-[11px] font-medium text-muted md:gap-2 md:p-3.5 md:px-[22px] md:text-[13px]">
                 <Icon name="info" size={14} className="shrink-0 md:h-[18px] md:w-[18px]" />
-                <span>Приклад для ілюстрації. Це не реальний прогноз.</span>
+                <span>{t('home.previewDisclaimer', 'Приклад для ілюстрації. Це не реальний прогноз.')}</span>
               </figcaption>
             </figure>
           </div>

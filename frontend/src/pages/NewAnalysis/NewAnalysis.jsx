@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useAuthModal } from '../../components/AuthModal/useAuthModal';
+import { useLanguage } from '../../context/LanguageContext';
 import { getCropName } from '../../constants/crops';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import { submitAnalysisRequest } from '../../services/analysisApi';
@@ -14,6 +15,7 @@ import SeasonsStep from './components/SeasonsStep';
 export default function NewAnalysis() {
   const { isAuthenticated, isLoading } = useAuth();
   const { openAuth } = useAuthModal();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -81,41 +83,46 @@ export default function NewAnalysis() {
   };
 
   const step2Summary = season
-    ? `Сезон ${season.year} · ${seasonPlots.length} ${plotsWord(seasonPlots.length)} · ${formatHa(totalAreaHa(seasonPlots))} · ${seasonPlots
-        .map((p) => `${p.label} — ${getCropName(p.cropId) ?? 'не вказано'}`)
+    ? `${t('analysisPage.step2SeasonPrefix', 'Сезон')} ${season.year} · ${seasonPlots.length} ${plotsWord(seasonPlots.length)} · ${formatHa(totalAreaHa(seasonPlots))} · ${seasonPlots
+        .map((p) => `${p.label} — ${getCropName(p.cropId) ?? t('analysisPage.step2NotSpecified', 'не вказано')}`)
         .join(', ')}`
-    : 'Сезони, поділ поля на ділянки та культури, що на них росли.';
+    : t('analysisPage.step2SummaryDefault', 'Сезони, поділ поля на ділянки та культури, що на них росли.');
 
   if (isLoading || !isAuthenticated) {
     return (
       <div className="mx-auto max-w-[720px] px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-brand-text">
-          Новий аналіз
+          {t('analysisPage.title', 'Новий аналіз')}
         </h1>
         <p className="mt-3 text-muted">
-          Увійдіть або зареєструйтеся, щоб створити новий аналіз.
+          {t('analysisPage.authNotice', 'Увійдіть або зареєструйтеся, щоб створити новий аналіз.')}
         </p>
       </div>
     );
   }
+
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-12 md:px-8 md:pt-9 xl:px-20 xl:pt-[42px] xl:pb-14">
       <header className="mb-6 flex flex-col gap-2 md:mb-7">
-        <p className="m-0 text-[13px] font-bold tracking-[0.4px] text-brand-dark uppercase">Новий розрахунок</p>
-        <h1 className="m-0 text-[32px] leading-[1.14] font-bold text-brand-text md:text-[42px]">Новий аналіз</h1>
+        <p className="m-0 text-[13px] font-bold tracking-[0.4px] text-brand-dark uppercase">
+          {t('analysisPage.badge', 'Новий розрахунок')}
+        </p>
+        <h1 className="m-0 text-[32px] leading-[1.14] font-bold text-brand-text md:text-[42px]">
+          {t('analysisPage.title', 'Новий аналіз')}
+        </h1>
         <p className="m-0 max-w-[720px] text-[15px] leading-[1.55] text-muted md:text-[17px]">
-          Оберіть поле, додайте культури сезону та розрахуйте найкращий варіант для господарства.
+          {t('analysisPage.subtitle', 'Оберіть поле, додайте культури сезону та розрахуйте найкращий варіант для господарства.')}
         </p>
       </header>
 
       <div className="flex flex-col gap-3.5">
         <AccordionSection
           {...sectionProps(1)}
-          title="Оберіть поле"
+          title={t('analysisPage.step1Title', 'Оберіть поле')}
           summary={
             field
               ? `${field.name} · ${formatHa(field.areaHa)}${field.region ? ` · ${field.region}` : ''}`
-              : 'Знайдіть населений пункт на карті — це лише переміщення до місця. Далі позначте межі свого поля.'
+              : t('analysisPage.step1SummaryDefault', 'Знайдіть населений пункт на карті — це лише переміщення до місця. Далі позначте межі свого поля.')
           }
         >
           <ErrorBoundary title="Помилка при виборі поля" message="Не вдалося відобразити карту або вибір поля. Спробуйте оновити сторінку.">
@@ -125,7 +132,7 @@ export default function NewAnalysis() {
 
         <AccordionSection
           {...sectionProps(2)}
-          title="Ділянки та попередні культури"
+          title={t('analysisPage.step2Title', 'Ділянки та попередні культури')}
           summary={step2Summary}
         >
           <ErrorBoundary title="Помилка при налаштуванні сезонів" message="Не вдалося відобразити ділянки цього сезону.">
@@ -135,11 +142,11 @@ export default function NewAnalysis() {
 
         <AccordionSection
           {...sectionProps(3)}
-          title={openStep === 3 ? 'Які культури розглядаємо?' : 'Культури цього сезону'}
+          title={openStep === 3 ? t('analysisPage.step3TitleActive', 'Які культури розглядаємо?') : t('analysisPage.step3TitleInactive', 'Культури цього сезону')}
           summary={
             result
-              ? `Обрано культур: ${selectedCrops.length}`
-              : 'Оберіть культури, які SIVAY порівняє для цього поля та сезону. Можна вибрати кілька.'
+              ? t('analysisPage.step3SummarySelected', `Обрано культур: ${selectedCrops.length}`, { count: selectedCrops.length })
+              : t('analysisPage.step3SummaryDefault', 'Оберіть культури, які SIVAY порівняє для цього поля та сезону. Можна вибрати кілька.')
           }
         >
           <ErrorBoundary title="Помилка при виборі культур" message="Не вдалося завантажити перелік культур.">

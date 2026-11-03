@@ -44,3 +44,22 @@ test('4. Localization: getNestedValue handles edge cases', () => {
 test('5. Localization: local storage key is standard and predictable', () => {
   assert.equal(LANGUAGE_STORAGE_KEY, 'sivay.language.v1');
 });
+
+test('6. Localization: interpolation formats parameterized strings correctly', () => {
+  assert.equal(
+    translate('uk', 'auth.welcomeUser', { name: 'Олександр' }),
+    'Вітаємо, Олександр! Ви успішно увійшли.',
+  );
+  assert.equal(
+    translate('en', 'auth.welcomeUser', { name: 'Alex' }),
+    'Welcome, Alex! You have signed in successfully.',
+  );
+  assert.equal(
+    translate('uk', 'analysisPage.step3SummarySelected', { count: 3 }),
+    'Обрано культур: 3',
+  );
+  assert.equal(
+    translate('en', 'analysisPage.step3SummarySelected', { count: 3 }),
+    'Selected crops: 3',
+  );
+});

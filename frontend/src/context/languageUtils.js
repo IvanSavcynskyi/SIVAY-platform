@@ -15,14 +15,26 @@ export const getNestedValue = (obj, path) => {
   return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined), obj);
 };
 
-export const translate = (language, path, fallback) => {
+export const translate = (language, path, fallback, params) => {
+  let resolvedParams = params;
+  let defaultFallback = fallback;
+  if (typeof fallback === 'object' && fallback !== null && params === undefined) {
+    resolvedParams = fallback;
+    defaultFallback = undefined;
+  }
+
   const activeDict = TRANSLATIONS[language];
-  const val = getNestedValue(activeDict, path);
-  if (val !== undefined) return val;
+  let val = getNestedValue(activeDict, path);
+  if (val === undefined) {
+    val = getNestedValue(TRANSLATIONS.uk, path);
+  }
+  if (val === undefined) {
+    val = defaultFallback ?? path;
+  }
 
-  const fallbackVal = getNestedValue(TRANSLATIONS.uk, path);
-  if (fallbackVal !== undefined) return fallbackVal;
+  if (typeof val === 'string' && resolvedParams && typeof resolvedParams === 'object') {
+    return val.replace(/\{(\w+)\}/g, (_, key) => (resolvedParams[key] !== undefined ? resolvedParams[key] : `{${key}}`));
+  }
 
-  return fallback ?? path;
+  return val;
 };
-

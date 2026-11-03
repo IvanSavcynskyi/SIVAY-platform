@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '../Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
@@ -19,6 +20,7 @@ const FORMS = {
 export default function AuthModal({ view, onNavigate, onClose }) {
   const panelRef = useRef(null);
   const pressStartedOnBackdrop = useRef(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { body, documentElement } = document;
@@ -138,7 +140,7 @@ export default function AuthModal({ view, onNavigate, onClose }) {
           <button
             type="button"
             className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-[18px] border border-border-soft bg-[#f7fbf8] text-brand-text transition-colors hover:bg-brand-tint"
-            aria-label="Закрити"
+            aria-label={t('common.close', 'Закрити')}
             onClick={onClose}
           >
             <Icon name="x" size={20} />

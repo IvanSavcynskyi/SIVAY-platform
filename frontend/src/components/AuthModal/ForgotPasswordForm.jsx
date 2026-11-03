@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../Button/Button';
 import Icon from '../Icon/Icon';
 import { useNotice } from '../Notice/useNotice';
+import { useLanguage } from '../../context/LanguageContext';
 import AuthField from './AuthField';
 import useAuthForm from './useAuthForm';
 import { requestPasswordReset } from './authApi';
@@ -11,6 +12,7 @@ const VALIDATORS = { email: validateEmail };
 
 export default function ForgotPasswordForm({ onNavigate }) {
   const { showNotice } = useNotice();
+  const { t } = useLanguage();
   const { values, errors, formError, setFormError, submitting, handleChange, handleSubmit } =
     useAuthForm({ email: '' }, VALIDATORS);
 
@@ -37,7 +39,7 @@ export default function ForgotPasswordForm({ onNavigate }) {
     const result = await requestPasswordReset(formValues);
 
     if (result.notConnected) {
-      showNotice('Відновлення пароля ще не реалізовано: лист не надсилається.');
+      showNotice(t('auth.resetNotImplemented', 'Відновлення пароля ще не реалізовано: лист не надсилається.'));
       setSentTo(formValues.email.trim());
       return;
     }
@@ -47,7 +49,7 @@ export default function ForgotPasswordForm({ onNavigate }) {
       return;
     }
 
-    setFormError(result.message || 'Не вдалося надіслати посилання. Спробуйте ще раз.');
+    setFormError(result.message || t('auth.resetFailed', 'Не вдалося надіслати посилання. Спробуйте ще раз.'));
   });
 
   if (sentTo) {
@@ -59,16 +61,15 @@ export default function ForgotPasswordForm({ onNavigate }) {
 
         <div className="flex flex-col gap-2">
           <h2 id="auth-modal-title" ref={titleRef} tabIndex={-1} className="m-0 text-2xl font-bold leading-[1.2] text-brand-text focus:outline-none md:text-[28px]">
-            Перевірте пошту
+            {t('auth.checkInboxTitle', 'Перевірте пошту')}
           </h2>
           <p className="m-0 text-[15px] leading-[1.5] text-muted">
-            Якщо акаунт з адресою <strong className="font-semibold text-brand-text [overflow-wrap:anywhere]">{sentTo}</strong> існує, ми
-            надішлемо на неї посилання для створення нового пароля.
+            {t('auth.checkInboxDesc', `Якщо акаунт з адресою ${sentTo} існує, ми надішлемо на неї посилання для створення нового пароля.`, { email: sentTo })}
           </p>
         </div>
 
         <Button arrow onClick={() => onNavigate('signin')} className="w-full">
-          Повернутися до входу
+          {t('auth.backToSignIn', 'Повернутися до входу')}
         </Button>
 
         <button
@@ -76,7 +77,8 @@ export default function ForgotPasswordForm({ onNavigate }) {
           className="w-full cursor-pointer border-0 bg-transparent py-2 text-center text-[15px] leading-[1.3] text-muted hover:[&>span]:underline"
           onClick={() => setSentTo(null)}
         >
-          Не отримали лист? <span className="font-semibold text-brand-dark">Спробувати ще раз</span>
+          {t('auth.didNotReceiveEmail', 'Не отримали лист?')}{' '}
+          <span className="font-semibold text-brand-dark">{t('auth.tryAgain', 'Спробувати ще раз')}</span>
         </button>
       </>
     );
@@ -86,24 +88,24 @@ export default function ForgotPasswordForm({ onNavigate }) {
     <>
       <div className="flex flex-col gap-2">
         <h2 id="auth-modal-title" className="m-0 text-2xl font-bold leading-[1.2] text-brand-text focus:outline-none md:text-[28px]">
-          Відновлення пароля
+          {t('auth.forgotPasswordTitle', 'Відновлення пароля')}
         </h2>
         <p className="m-0 text-[15px] leading-[1.5] text-muted">
-          Вкажіть електронну пошту, і ми надішлемо посилання для створення нового пароля.
+          {t('auth.forgotPasswordSubtitle', 'Вкажіть електронну пошту, і ми надішлемо посилання для створення нового пароля.')}
         </p>
       </div>
 
       <form ref={formRef} className="flex flex-col gap-4 md:gap-5" onSubmit={submit} noValidate>
         <div className="flex flex-col gap-3.5 md:gap-4">
           <AuthField
-            label="Електронна пошта"
+            label={t('auth.email', 'Електронна пошта')}
             icon="mail"
             name="email"
             type="email"
             value={values.email}
             onChange={handleChange}
             error={errors.email}
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder', 'you@example.com')}
             autoComplete="email"
             autoFocus
           />
@@ -116,7 +118,7 @@ export default function ForgotPasswordForm({ onNavigate }) {
         )}
 
         <Button type="submit" arrow disabled={submitting} className="w-full">
-          Надіслати посилання
+          {t('auth.resetPasswordBtn', 'Надіслати посилання')}
         </Button>
       </form>
 
@@ -125,7 +127,8 @@ export default function ForgotPasswordForm({ onNavigate }) {
         className="w-full cursor-pointer border-0 bg-transparent py-2 text-center text-[15px] leading-[1.3] text-muted hover:[&>span]:underline"
         onClick={() => onNavigate('signin')}
       >
-        Згадали пароль? <span className="font-semibold text-brand-dark">Увійти</span>
+        {t('auth.rememberPassword', 'Згадали пароль?')}{' '}
+        <span className="font-semibold text-brand-dark">{t('header.signIn', 'Увійти')}</span>
       </button>
     </>
   );

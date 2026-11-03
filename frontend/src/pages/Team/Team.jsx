@@ -1,5 +1,6 @@
 import AppLink from '../../components/AppLink/AppLink';
 import Icon from '../../components/Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 
 const TEAM_MEMBERS = [
   {
@@ -109,139 +110,150 @@ const VALUES = [
 ];
 
 export default function Team() {
+  const { t } = useLanguage();
+
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-16 md:px-8 md:pt-10 md:pb-24 xl:px-20">
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Хлібні крихти" className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
+      <nav aria-label={t('common.breadcrumbAria', 'Хлібні крихти')} className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
         <AppLink href="/" className="transition-colors hover:text-brand-dark">
-          Головна
+          {t('nav.home', 'Головна')}
         </AppLink>
         <Icon name="chevron-right" size={14} className="text-muted/60" />
-        <span className="text-brand-text">Наша команда</span>
+        <span className="text-brand-text">{t('team.breadcrumb', 'Наша команда')}</span>
       </nav>
 
       {/* Header Banner */}
       <header className="mb-10 flex flex-col gap-3 rounded-2xl border border-border-main bg-gradient-to-br from-brand-tint via-white to-surface-panel p-6 shadow-sm md:mb-14 md:rounded-[24px] md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[12px] font-bold tracking-wider text-brand-dark uppercase">
-            <Icon name="users" size={14} /> Люди за технологіями SIVAY
+            <Icon name="users" size={14} /> {t('team.badge', 'Люди за технологіями SIVAY')}
           </span>
           <span className="text-xs font-semibold text-muted">
-            Команда експертів в Україні
+            {t('team.badgeSub', 'Команда експертів в Україні')}
           </span>
         </div>
 
         <h1 className="m-0 text-2xl font-bold leading-[1.15] text-brand-text md:text-4xl xl:text-[44px]">
-          Наша команда
+          {t('team.title', 'Наша команда')}
         </h1>
 
         <p className="m-0 max-w-[840px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
-          Ми об’єднали вчених-агрономів, розробників геоінформаційних систем та аналітиків даних,
-          щоб створити платформу, яка робить українське землеробство точним, прибутковим та передбачуваним.
+          {t('team.subtitle', 'Ми об’єднали вчених-агрономів, розробників геоінформаційних систем та аналітиків даних, щоб створити платформу, яка робить українське землеробство точним, прибутковим та передбачуваним.')}
         </p>
       </header>
 
       {/* Team Cards Grid */}
       <section className="mb-14 md:mb-20" aria-labelledby="team-grid-heading">
         <h2 id="team-grid-heading" className="sr-only">
-          Список учасників команди SIVAY
+          {t('team.srGrid', 'Список учасників команди SIVAY')}
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {TEAM_MEMBERS.map((member) => (
-            <article
-              key={member.id}
-              className="group flex flex-col justify-between rounded-2xl border border-border-main bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-brand hover:shadow-card"
-            >
-              <div>
-                {/* Avatar */}
-                <div className="mb-5 flex items-start justify-between gap-3">
-                  <div className="relative">
-                    <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl border-2 border-brand-tint bg-brand-soft text-brand-dark shadow-sm transition-transform duration-200 group-hover:scale-105">
-                      {member.photo ? (
-                        <img
-                          src={member.photo}
-                          alt={member.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <Icon name="user" size={38} className="text-brand-dark" />
-                      )}
+          {TEAM_MEMBERS.map((member) => {
+            const memberName = t(`team.members.${member.id}.name`, member.name);
+            const memberRole = t(`team.members.${member.id}.role`, member.role);
+            const memberBio = t(`team.members.${member.id}.bio`, member.bio);
+            const rawSkills = t(`team.members.${member.id}.skills`, member.skills);
+            const memberSkills = Array.isArray(rawSkills) ? rawSkills : member.skills;
+
+            return (
+              <article
+                key={member.id}
+                className="group flex flex-col justify-between rounded-2xl border border-border-main bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-brand hover:shadow-card"
+              >
+                <div>
+                  {/* Avatar */}
+                  <div className="mb-5 flex items-start justify-between gap-3">
+                    <div className="relative">
+                      <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl border-2 border-brand-tint bg-brand-soft text-brand-dark shadow-sm transition-transform duration-200 group-hover:scale-105">
+                        {member.photo ? (
+                          <img
+                            src={member.photo}
+                            alt={memberName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Icon name="user" size={38} className="text-brand-dark" />
+                        )}
+                      </div>
+                      <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-brand text-[10px] font-bold text-brand-darkest shadow-sm">
+                        #{member.id}
+                      </span>
                     </div>
-                    <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-brand text-[10px] font-bold text-brand-darkest shadow-sm">
-                      #{member.id}
-                    </span>
+                  </div>
+
+                  {/* Name & Role */}
+                  <h3 className="m-0 text-lg font-bold leading-snug text-brand-text group-hover:text-brand-dark">
+                    {memberName}
+                  </h3>
+                  <p className="m-0 mt-1 text-[13px] font-semibold text-brand-dark">
+                    {memberRole}
+                  </p>
+
+                  {/* Bio */}
+                  <p className="m-0 mt-3.5 text-[13px] leading-[1.6] text-muted">
+                    {memberBio}
+                  </p>
+
+                  {/* Skills Chips */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {memberSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="rounded-md bg-surface-panel px-2 py-0.5 text-[11px] font-semibold text-muted"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                {/* Name & Role */}
-                <h3 className="m-0 text-lg font-bold leading-snug text-brand-text group-hover:text-brand-dark">
-                  {member.name}
-                </h3>
-                <p className="m-0 mt-1 text-[13px] font-semibold text-brand-dark">
-                  {member.role}
-                </p>
-
-                {/* Bio */}
-                <p className="m-0 mt-3.5 text-[13px] leading-[1.6] text-muted">
-                  {member.bio}
-                </p>
-
-                {/* Skills Chips */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {member.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="rounded-md bg-surface-panel px-2 py-0.5 text-[11px] font-semibold text-muted"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+                {/* Card Footer: Social & Contact Links */}
+                <div className="mt-6 flex items-center justify-between border-t border-border-soft pt-4">
+                  <span className="text-[12px] font-semibold text-muted">
+                    {t('team.contactsLabel', 'Контакти:')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {member.email && (
+                      <a
+                        href={`mailto:${member.email}`}
+                        className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
+                        title={t('team.emailTitle', `Написати на ${member.email}`, { email: member.email })}
+                        aria-label={t('team.emailAria', `Електронна пошта ${memberName}`, { name: memberName })}
+                      >
+                        <Icon name="mail" size={15} />
+                      </a>
+                    )}
+                    {member.linkedin && (
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
+                        title={t('team.linkedinTitle', 'Профіль LinkedIn')}
+                        aria-label={t('team.linkedinAria', `LinkedIn профіль ${memberName}`, { name: memberName })}
+                      >
+                        <Icon name="linkedin" size={15} />
+                      </a>
+                    )}
+                    {member.github && (
+                      <a
+                        href={member.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
+                        title={t('team.githubTitle', 'Профіль GitHub')}
+                        aria-label={t('team.githubAria', `GitHub профіль ${memberName}`, { name: memberName })}
+                      >
+                        <Icon name="github" size={15} />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              {/* Card Footer: Social & Contact Links */}
-              <div className="mt-6 flex items-center justify-between border-t border-border-soft pt-4">
-                <span className="text-[12px] font-semibold text-muted">Контакти:</span>
-                <div className="flex items-center gap-2">
-                  {member.email && (
-                    <a
-                      href={`mailto:${member.email}`}
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
-                      title={`Написати на ${member.email}`}
-                      aria-label={`Електронна пошта ${member.name}`}
-                    >
-                      <Icon name="mail" size={15} />
-                    </a>
-                  )}
-                  {member.linkedin && (
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
-                      title="Профіль LinkedIn"
-                      aria-label={`LinkedIn профіль ${member.name}`}
-                    >
-                      <Icon name="linkedin" size={15} />
-                    </a>
-                  )}
-                  {member.github && (
-                    <a
-                      href={member.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-border-main bg-white text-muted transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
-                      title="Профіль GitHub"
-                      aria-label={`GitHub профіль ${member.name}`}
-                    >
-                      <Icon name="github" size={15} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -249,13 +261,13 @@ export default function Team() {
       <section className="mb-14 rounded-3xl border border-border-main bg-surface-panel p-6 md:mb-20 md:p-10 lg:p-12" aria-labelledby="values-heading">
         <div className="mb-8 max-w-[720px] md:mb-12">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[12px] font-bold tracking-wider text-brand-dark uppercase">
-            <Icon name="award" size={14} /> Наші стандарти
+            <Icon name="award" size={14} /> {t('team.valuesBadge', 'Наші стандарти')}
           </span>
           <h2 id="values-heading" className="m-0 mt-3 text-2xl font-bold leading-tight text-brand-text md:text-3xl">
-            Принципи, на яких побудовано платформу SIVAY
+            {t('team.valuesTitle', 'Принципи, на яких побудовано платформу SIVAY')}
           </h2>
           <p className="m-0 mt-2 text-[15px] leading-relaxed text-muted">
-            Ми створюємо технології не заради моди, а для щоденної практичної користі кожного фермера.
+            {t('team.valuesSubtitle', 'Ми створюємо технології не заради моди, а для щоденної практичної користі кожного фермера.')}
           </p>
         </div>
 
@@ -268,8 +280,12 @@ export default function Team() {
               <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-brand-soft text-brand-dark">
                 <Icon name={val.icon} size={24} />
               </div>
-              <h3 className="m-0 text-lg font-bold text-brand-text">{val.title}</h3>
-              <p className="m-0 mt-2 text-[13px] leading-[1.6] text-muted">{val.description}</p>
+              <h3 className="m-0 text-lg font-bold text-brand-text">
+                {t(`team.values.${val.id}.title`, val.title)}
+              </h3>
+              <p className="m-0 mt-2 text-[13px] leading-[1.6] text-muted">
+                {t(`team.values.${val.id}.description`, val.description)}
+              </p>
             </div>
           ))}
         </div>
@@ -283,14 +299,13 @@ export default function Team() {
         <div className="relative z-10 flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
           <div className="max-w-[700px]">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold tracking-wider text-brand-light uppercase backdrop-blur-sm">
-              <Icon name="sprout" size={14} /> Розвиваємо агросектор разом
+              <Icon name="sprout" size={14} /> {t('team.ctaBadge', 'Розвиваємо агросектор разом')}
             </span>
             <h2 id="cta-heading" className="m-0 mt-3 text-2xl font-bold leading-tight text-white md:text-3xl lg:text-4xl">
-              Бажаєте долучитися до команди або маєте пропозицію щодо співпраці?
+              {t('team.ctaTitle', 'Бажаєте долучитися до команди або маєте пропозицію щодо співпраці?')}
             </h2>
             <p className="m-0 mt-3 text-[15px] leading-relaxed text-brand-light/90 md:text-base">
-              Ми завжди раді талановитим агрономам, інженерам геоінформатики та партнерам.
-              Зв’яжіться з нами, щоб обговорити можливості спільних проектів.
+              {t('team.ctaSubtitle', 'Ми завжди раді талановитим агрономам, інженерам геоінформатики та партнерам. Зв’яжіться з нами, щоб обговорити можливості спільних проектів.')}
             </p>
           </div>
 
@@ -299,13 +314,13 @@ export default function Team() {
               href="/contacts"
               className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 text-sm font-bold text-brand-darkest shadow-button transition-transform hover:scale-105 active:scale-95"
             >
-              Зв’язатися з нами
+              {t('team.ctaContact', 'Зв’язатися з нами')}
             </AppLink>
             <AppLink
               href="/analysis/new"
               className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-6 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
             >
-              Спробувати розрахунок
+              {t('team.ctaTry', 'Спробувати розрахунок')}
             </AppLink>
           </div>
         </div>

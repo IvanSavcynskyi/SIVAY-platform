@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import Icon from '../Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AuthField({
   label,
@@ -17,6 +18,7 @@ export default function AuthField({
   const errorId = `${id}-error`;
   const [isVisible, setIsVisible] = useState(false);
   const isPassword = type === 'password';
+  const { t } = useLanguage();
 
   const controlBorder = error
     ? 'border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/20'
@@ -48,7 +50,7 @@ export default function AuthField({
           <button
             type="button"
             className="-mr-2 grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-[10px] border-0 bg-transparent p-0 text-muted transition-colors hover:text-brand-text"
-            aria-label={isVisible ? 'Сховати пароль' : 'Показати пароль'}
+            aria-label={isVisible ? t('auth.hidePassword', 'Сховати пароль') : t('auth.showPassword', 'Показати пароль')}
             aria-pressed={isVisible}
             onClick={() => setIsVisible((current) => !current)}
           >
@@ -58,7 +60,7 @@ export default function AuthField({
       </div>
       {error && (
         <p id={errorId} className="m-0 text-[13px] leading-[1.4] text-danger">
-          {error}
+          {t(error, error)}
         </p>
       )}
     </div>

@@ -47,7 +47,7 @@ export function LanguageProvider({ children, initialLanguage }) {
   }, [language]);
 
   const t = useMemo(() => {
-    return (path, fallback) => translate(language, path, fallback);
+    return (path, fallback, params) => translate(language, path, fallback, params);
   }, [language]);
 
   const value = useMemo(
@@ -57,7 +57,7 @@ export function LanguageProvider({ children, initialLanguage }) {
       t,
       supportedLanguages: SUPPORTED_LANGUAGES,
     }),
-    [language, t]
+    [language, t],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
@@ -66,7 +66,12 @@ export function LanguageProvider({ children, initialLanguage }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    return {
+      language: 'uk',
+      setLanguage: () => {},
+      t: (path, fallback, params) => translate('uk', path, fallback, params),
+      supportedLanguages: SUPPORTED_LANGUAGES,
+    };
   }
   return context;
 }

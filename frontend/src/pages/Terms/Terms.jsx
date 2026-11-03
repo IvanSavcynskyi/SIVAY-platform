@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react';
 import AppLink from '../../components/AppLink/AppLink';
 import Button from '../../components/Button/Button';
 import Icon from '../../components/Icon/Icon';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SECTIONS = [
-  { id: 'general', title: '1. Загальні положення' },
-  { id: 'services', title: '2. Предмет та функції платформи' },
-  { id: 'account', title: '3. Реєстрація та безпека акаунта' },
-  { id: 'data-ownership', title: '4. Право власності на дані та інтелектуальна власність' },
-  { id: 'recommendations', title: '5. Характер аналітичних рекомендацій' },
-  { id: 'user-rules', title: '6. Правила користування та обмеження' },
-  { id: 'liability', title: '7. Обмеження відповідальності' },
-  { id: 'changes', title: '8. Зміни до умов та припинення дії' },
-  { id: 'contacts', title: '9. Застосовне право та контактна інформація' },
+  { id: 'general', key: 'general', title: '1. Загальні положення' },
+  { id: 'services', key: 'services', title: '2. Предмет та функції платформи' },
+  { id: 'account', key: 'account', title: '3. Реєстрація та безпека акаунта' },
+  { id: 'data-ownership', key: 'dataOwnership', title: '4. Право власності на дані та інтелектуальна власність' },
+  { id: 'recommendations', key: 'recommendations', title: '5. Характер аналітичних рекомендацій' },
+  { id: 'user-rules', key: 'userRules', title: '6. Правила користування та обмеження' },
+  { id: 'liability', key: 'liability', title: '7. Обмеження відповідальності' },
+  { id: 'changes', key: 'changes', title: '8. Зміни до умов та припинення дії' },
+  { id: 'contacts', key: 'contacts', title: '9. Застосовне право та контактна інформація' },
 ];
 
 export default function Terms() {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState('general');
 
   useEffect(() => {
@@ -70,32 +72,31 @@ export default function Terms() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-16 md:px-8 md:pt-10 md:pb-24 xl:px-20">
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Хлібні крихти" className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
+      <nav aria-label={t('common.breadcrumbAria', 'Хлібні крихти')} className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
         <AppLink href="/" className="transition-colors hover:text-brand-dark">
-          Головна
+          {t('nav.home', 'Головна')}
         </AppLink>
         <Icon name="chevron-right" size={14} className="text-muted/60" />
-        <span className="text-brand-text">Умови використання</span>
+        <span className="text-brand-text">{t('termsPage.breadcrumb', 'Умови використання')}</span>
       </nav>
 
       {/* Header Banner */}
       <header className="mb-8 flex flex-col gap-3 rounded-2xl border border-border-main bg-gradient-to-br from-brand-tint via-white to-surface-panel p-6 shadow-sm md:mb-12 md:rounded-[24px] md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[12px] font-bold tracking-wider text-brand-dark uppercase">
-            <Icon name="check-circle" size={14} /> Юридична інформація
+            <Icon name="check-circle" size={14} /> {t('termsPage.badge', 'Юридична інформація')}
           </span>
           <span className="text-xs font-semibold text-muted">
-            Редакція від 26 жовтня 2026 р.
+            {t('termsPage.effectiveDate', 'Редакція від 26 жовтня 2026 р.')}
           </span>
         </div>
 
         <h1 className="m-0 text-2xl font-bold leading-[1.15] text-brand-text md:text-4xl xl:text-[44px]">
-          Умови використання платформи SIVAY
+          {t('termsPage.title', 'Умови використання платформи SIVAY')}
         </h1>
 
         <p className="m-0 max-w-[820px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
-          Будь ласка, уважно ознайомтеся з цими Умовами перед початком роботи з платформою SIVAY. 
-          Використовуючи наш сервіс, ви погоджуєтеся з наведеними правилами та приймаєте на себе зобов’язання щодо їх дотримання.
+          {t('termsPage.description', 'Будь ласка, уважно ознайомтеся з цими Умовами перед початком роботи з платформою SIVAY. Використовуючи наш сервіс, ви погоджуєтеся з наведеними правилами та приймаєте на себе зобов’язання щодо їх дотримання.')}
         </p>
 
         {/* Quick Page Switcher */}
@@ -104,19 +105,19 @@ export default function Terms() {
             href="/terms"
             className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-brand-darkest shadow-sm"
           >
-            Умови використання
+            {t('infoLinks.terms', 'Умови використання')}
           </AppLink>
           <AppLink
             href="/privacy"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Політика конфіденційності
+            {t('infoLinks.privacy', 'Політика конфіденційності')}
           </AppLink>
           <AppLink
             href="/contacts"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Контакти
+            {t('infoLinks.contacts', 'Контакти')}
           </AppLink>
         </div>
       </header>
@@ -128,9 +129,9 @@ export default function Terms() {
           <div className="sticky top-24 flex flex-col gap-6">
             <div className="rounded-2xl border border-border-main bg-white p-5 shadow-sm">
               <h2 className="m-0 mb-3 text-xs font-bold tracking-wider text-brand-dark uppercase">
-                Зміст документа
+                {t('termsPage.tocTitle', 'Зміст документа')}
               </h2>
-              <nav aria-label="Розділи умов" className="flex flex-col gap-1">
+              <nav aria-label={t('termsPage.sidebarAria', 'Розділи умов')} className="flex flex-col gap-1">
                 {SECTIONS.map((sec) => (
                   <button
                     key={sec.id}
@@ -142,7 +143,7 @@ export default function Terms() {
                         : 'text-muted hover:bg-surface-alt hover:text-brand-text'
                     }`}
                   >
-                    {sec.title}
+                    {t(`termsPage.sections.${sec.key}`, sec.title)}
                   </button>
                 ))}
               </nav>
@@ -153,10 +154,10 @@ export default function Terms() {
                 <Icon name="sprout" size={20} />
               </span>
               <h3 className="m-0 text-base font-bold text-brand-text">
-                Потрібна консультація?
+                {t('termsPage.ctaTitle', 'Потрібна консультація?')}
               </h3>
               <p className="mt-1.5 mb-4 text-[13px] leading-[1.5] text-muted">
-                Якщо у вас виникли запитання щодо умов використання платформи, зв'яжіться з нашою командою.
+                {t('termsPage.ctaSubtitle', 'Якщо у вас виникли запитання щодо умов використання платформи, зв’яжіться з нашою командою.')}
               </p>
               <a
                 href="mailto:legal@sivay.com.ua"
@@ -173,7 +174,7 @@ export default function Terms() {
           {/* Section 1 */}
           <section id="general" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              1. Загальні положення
+              {t('termsPage.sections.general', '1. Загальні положення')}
             </h2>
             <p className="mb-3">
               1.1. Цей документ є публічним договором (публічною офертою) між онлайн-платформою <strong>SIVAY</strong> (далі — «Платформа», «ми», «нас») та будь-якою дієздатною фізичною або юридичною особою (далі — «Користувач», «ви»), що використовує функціонал платформи.
@@ -189,7 +190,7 @@ export default function Terms() {
           {/* Section 2 */}
           <section id="services" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              2. Предмет та функції платформи
+              {t('termsPage.sections.services', '2. Предмет та функції платформи')}
             </h2>
             <p className="mb-3">
               2.1. SIVAY надає Користувачам цифровий доступ до таких основних можливостей:
@@ -208,7 +209,7 @@ export default function Terms() {
           {/* Section 3 */}
           <section id="account" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              3. Реєстрація та безпека акаунта
+              {t('termsPage.sections.account', '3. Реєстрація та безпека акаунта')}
             </h2>
             <p className="mb-3">
               3.1. Для збереження створених полів, історії ділянок та отримання доступу до аналізу Користувач проходить процедуру реєстрації з наданням достовірної адреси електронної пошти та встановленням надійного пароля (не менше 8 символів).
@@ -224,7 +225,7 @@ export default function Terms() {
           {/* Section 4 */}
           <section id="data-ownership" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              4. Право власності на дані та інтелектуальна власність
+              {t('termsPage.sections.dataOwnership', '4. Право власності на дані та інтелектуальна власність')}
             </h2>
             <div className="mb-4 rounded-xl border border-brand-soft bg-brand-tint/60 p-4 text-[14px] leading-relaxed text-brand-dark">
               <strong>Ключовий принцип SIVAY:</strong> Ваші поля та агрономічні дані належать виключно вам. Ми не продаємо і не передаємо межі ваших ділянок конкурентам чи третім особам.
@@ -240,7 +241,7 @@ export default function Terms() {
           {/* Section 5 */}
           <section id="recommendations" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              5. Характер аналітичних рекомендацій
+              {t('termsPage.sections.recommendations', '5. Характер аналітичних рекомендацій')}
             </h2>
             <p className="mb-3">
               5.1. Рекомендації щодо вибору культур, показники перспективності та аналітичні висновки формуються автоматизованими алгоритмами на основі математичних моделей, узагальнених погодних прогнозів та ринкових індикаторів.
@@ -256,7 +257,7 @@ export default function Terms() {
           {/* Section 6 */}
           <section id="user-rules" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              6. Правила користування та обмеження
+              {t('termsPage.sections.userRules', '6. Правила користування та обмеження')}
             </h2>
             <p className="mb-3">Користувачеві забороняється:</p>
             <ul className="list-disc pl-5 space-y-1.5 text-muted">
@@ -270,7 +271,7 @@ export default function Terms() {
           {/* Section 7 */}
           <section id="liability" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              7. Обмеження відповідальності
+              {t('termsPage.sections.liability', '7. Обмеження відповідальності')}
             </h2>
             <p className="mb-3">
               7.1. Платформа надається за принципом <em>«як є» (as is)</em>. Ми докладаємо всіх зусиль для безперебійної та безпомилкової роботи сервісу, однак не гарантуємо абсолютної відсутності технічних перерв.
@@ -286,7 +287,7 @@ export default function Terms() {
           {/* Section 8 */}
           <section id="changes" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              8. Зміни до умов та припинення дії
+              {t('termsPage.sections.changes', '8. Зміни до умов та припинення дії')}
             </h2>
             <p className="mb-3">
               8.1. SIVAY має право періодично оновлювати ці Умови для відображення змін у законодавстві або запуску нових функцій. Оновлена редакція набирає чинності з моменту її публікації на цій сторінці.
@@ -299,7 +300,7 @@ export default function Terms() {
           {/* Section 9 */}
           <section id="contacts" className="scroll-mt-24 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
             <h2 className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              9. Застосовне право та контактна інформація
+              {t('termsPage.sections.contacts', '9. Застосовне право та контактна інформація')}
             </h2>
             <p className="mb-3">
               9.1. Ці Умови регулюються та тлумачаться відповідно до чинного матеріального права України. Усі спори, що не можуть бути врегульовані шляхом перемовин, підлягають розгляду у відповідних судах України.
@@ -316,10 +317,10 @@ export default function Terms() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Button href="/" variant="secondary" arrow>
-                На головну сторінку
+                {t('termsPage.backHome', 'На головну сторінку')}
               </Button>
               <Button href="/privacy">
-                Переглянути Політику конфіденційності
+                {t('infoLinks.privacy', 'Переглянути Політику конфіденційності')}
               </Button>
             </div>
           </section>
@@ -328,4 +329,3 @@ export default function Terms() {
     </div>
   );
 }
-

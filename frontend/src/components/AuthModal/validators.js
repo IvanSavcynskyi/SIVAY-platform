@@ -1,4 +1,3 @@
-
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -6,11 +5,11 @@ export function validateName(value) {
   const name = value.trim();
 
   if (!name) {
-    return 'Вкажіть ім’я';
+    return 'auth.errors.nameRequired';
   }
 
   if (name.length < 2) {
-    return 'Ім’я має містити щонайменше 2 символи';
+    return 'auth.errors.nameMin';
   }
 
   return '';
@@ -20,11 +19,11 @@ export function validateEmail(value) {
   const email = value.trim();
 
   if (!email) {
-    return 'Вкажіть електронну пошту';
+    return 'auth.errors.emailRequired';
   }
 
   if (!EMAIL_PATTERN.test(email)) {
-    return 'Вкажіть коректну електронну пошту';
+    return 'auth.errors.emailInvalid';
   }
 
   return '';
@@ -32,16 +31,16 @@ export function validateEmail(value) {
 
 export function validateNewPassword(value) {
   if (!value) {
-    return 'Вкажіть пароль';
+    return 'auth.errors.passwordRequired';
   }
 
   if (value.length < MIN_PASSWORD_LENGTH) {
-    return `Пароль має містити щонайменше ${MIN_PASSWORD_LENGTH} символів`;
+    return 'auth.errors.passwordMin';
   }
 
   return '';
 }
 
 export function validateCurrentPassword(value) {
-  return value ? '' : 'Введіть пароль';
+  return value ? '' : 'auth.errors.passwordEnter';
 }

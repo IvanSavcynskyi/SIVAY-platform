@@ -3,6 +3,7 @@ import AppLink from '../../components/AppLink/AppLink';
 import Button from '../../components/Button/Button';
 import Icon from '../../components/Icon/Icon';
 import { useNotice } from '../../components/Notice/useNotice';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CONTACT_CHANNELS = [
   {
@@ -61,7 +62,7 @@ const CONTACT_CHANNELS = [
   },
 ];
 
-const FAQS = [
+const DEFAULT_FAQS = [
   {
     question: 'Як швидко відповідає служба підтримки SIVAY?',
     answer:
@@ -86,12 +87,13 @@ const FAQS = [
 
 export default function Contacts() {
   const { showNotice } = useNotice();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    subject: 'Технічна підтримка',
+    subject: 'support',
     message: '',
   });
 
@@ -99,6 +101,9 @@ export default function Contacts() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState(null);
+
+  const rawFaqs = t('contacts.faqs', DEFAULT_FAQS);
+  const faqs = Array.isArray(rawFaqs) ? rawFaqs : DEFAULT_FAQS;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -111,17 +116,17 @@ export default function Contacts() {
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) {
-      newErrors.name = "Будь ласка, вкажіть ваше ім'я";
+      newErrors.name = t('contacts.errors.nameRequired', 'Будь ласка, вкажіть ваше ім’я');
     }
     if (!formData.email.trim()) {
-      newErrors.email = 'Вкажіть адресу електронної пошти';
+      newErrors.email = t('contacts.errors.emailRequired', 'Вкажіть адресу електронної пошти');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = 'Введіть коректний email (наприклад: name@farm.ua)';
+      newErrors.email = t('contacts.errors.emailInvalid', 'Введіть коректний email (наприклад: name@farm.ua)');
     }
     if (!formData.message.trim()) {
-      newErrors.message = 'Введіть текст вашого повідомлення';
+      newErrors.message = t('contacts.errors.messageRequired', 'Введіть текст вашого повідомлення');
     } else if (formData.message.trim().length < 10) {
-      newErrors.message = 'Повідомлення має містити щонайменше 10 символів';
+      newErrors.message = t('contacts.errors.messageMin', 'Повідомлення має містити щонайменше 10 символів');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -135,16 +140,15 @@ export default function Contacts() {
 
     setIsSubmitting(true);
 
-    // Імітація надійного відправлення форми (клієнтська частина)
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
-      showNotice("Дякуємо! Ваше звернення надіслано. Ми відповімо вам найближчим часом.");
+      showNotice(t('contacts.toastSuccess', 'Дякуємо! Ваше звернення надіслано. Ми відповімо вам найближчим часом.'));
       setFormData({
         name: '',
         email: '',
         phone: '',
-        subject: 'Технічна підтримка',
+        subject: 'support',
         message: '',
       });
     }, 600);
@@ -157,32 +161,31 @@ export default function Contacts() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-16 md:px-8 md:pt-10 md:pb-24 xl:px-20">
       {/* Breadcrumb Navigation */}
-      <nav aria-label="Хлібні крихти" className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
+      <nav aria-label={t('common.breadcrumbAria', 'Хлібні крихти')} className="mb-4 flex items-center gap-2 text-[13px] font-medium text-muted">
         <AppLink href="/" className="transition-colors hover:text-brand-dark">
-          Головна
+          {t('nav.home', 'Головна')}
         </AppLink>
         <Icon name="chevron-right" size={14} className="text-muted/60" />
-        <span className="text-brand-text">Контакти</span>
+        <span className="text-brand-text">{t('contacts.breadcrumb', 'Контакти')}</span>
       </nav>
 
       {/* Header Banner */}
       <header className="mb-8 flex flex-col gap-3 rounded-2xl border border-border-main bg-gradient-to-br from-brand-tint via-white to-surface-panel p-6 shadow-sm md:mb-12 md:rounded-[24px] md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[12px] font-bold tracking-wider text-brand-dark uppercase">
-            <Icon name="check-circle" size={14} /> Зв’язок та підтримка
+            <Icon name="check-circle" size={14} /> {t('contacts.badge', 'Зв’язок та підтримка')}
           </span>
           <span className="text-xs font-semibold text-muted">
-            Працюємо по всій Україні
+            {t('contacts.badgeSub', 'Працюємо по всій Україні')}
           </span>
         </div>
 
         <h1 className="m-0 text-2xl font-bold leading-[1.15] text-brand-text md:text-4xl xl:text-[44px]">
-          Контакти платформи SIVAY
+          {t('contacts.title', 'Контакти платформи SIVAY')}
         </h1>
 
         <p className="m-0 max-w-[840px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
-          Маєте запитання щодо розрахунку культур, створення полів чи інтеграцій? 
-          Наша команда аналітиків та технічних фахівців готова допомогти вам отримати максимальний результат для вашого господарства.
+          {t('contacts.subtitle', 'Маєте запитання щодо розрахунку культур, створення полів чи інтеграцій? Наша команда аналітиків та технічних фахівців готова допомогти вам отримати максимальний результат для вашого господарства.')}
         </p>
 
         {/* Quick Page Switcher */}
@@ -191,19 +194,19 @@ export default function Contacts() {
             href="/contacts"
             className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-brand-darkest shadow-sm"
           >
-            Контакти
+            {t('infoLinks.contacts', 'Контакти')}
           </AppLink>
           <AppLink
             href="/privacy"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Політика конфіденційності
+            {t('infoLinks.privacy', 'Політика конфіденційності')}
           </AppLink>
           <AppLink
             href="/terms"
             className="inline-flex items-center gap-2 rounded-xl border border-border-main bg-white px-4 py-2 text-[14px] font-semibold text-muted transition-colors hover:border-brand hover:text-brand-dark"
           >
-            Умови використання
+            {t('infoLinks.terms', 'Умови використання')}
           </AppLink>
         </div>
       </header>
@@ -214,10 +217,10 @@ export default function Contacts() {
         <div className="flex flex-col gap-8 lg:col-span-7">
           <section aria-labelledby="channels-heading">
             <h2 id="channels-heading" className="m-0 mb-4 text-xl font-bold text-brand-text md:text-2xl">
-              Прямі канали комунікації
+              {t('contacts.channelsTitle', 'Прямі канали комунікації')}
             </h2>
             <p className="m-0 mb-6 text-[15px] leading-[1.6] text-muted">
-              Оберіть зручний для вас спосіб зв’язку. Ми оперативно відповідаємо та консультуємо на кожному етапі користування сервісом.
+              {t('contacts.channelsSubtitle', 'Оберіть зручний для вас спосіб зв’язку. Ми оперативно відповідаємо та консультуємо на кожному етапі користування сервісом.')}
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -232,15 +235,15 @@ export default function Contacts() {
                         <Icon name={ch.icon} size={20} />
                       </span>
                       <span className="rounded-full bg-surface-alt px-2.5 py-0.5 text-[11px] font-semibold text-brand-dark">
-                        {ch.badge}
+                        {t(`contacts.channels.${ch.id}.badge`, ch.badge)}
                       </span>
                     </div>
 
                     <h3 className="m-0 text-base font-bold text-brand-text">
-                      {ch.title}
+                      {t(`contacts.channels.${ch.id}.title`, ch.title)}
                     </h3>
                     <p className="mt-1.5 mb-4 text-[13px] leading-[1.5] text-muted">
-                      {ch.description}
+                      {t(`contacts.channels.${ch.id}.description`, ch.description)}
                     </p>
                   </div>
 
@@ -269,10 +272,10 @@ export default function Contacts() {
               </span>
               <div>
                 <h3 id="guarantee-heading" className="m-0 text-base font-bold text-brand-text md:text-lg">
-                  Графік консультацій та сезонна підтримка
+                  {t('contacts.scheduleTitle', 'Графік консультацій та сезонна підтримка')}
                 </h3>
                 <p className="m-0 mt-1 text-[14px] leading-[1.6] text-muted">
-                  У періоди весняної посівної та осіннього збору врожаю служба клієнтської та технічної підтримки SIVAY працює в посиленому режимі без вихідних з 07:00 до 22:00.
+                  {t('contacts.scheduleText', 'У періоди весняної посівної та осіннього збору врожаю служба клієнтської та технічної підтримки SIVAY працює в посиленому режимі без вихідних з 07:00 до 22:00.')}
                 </p>
               </div>
             </div>
@@ -291,10 +294,10 @@ export default function Contacts() {
               </span>
               <div>
                 <h2 id="form-heading" className="m-0 text-lg font-bold text-brand-text md:text-xl">
-                  Напишіть нам
+                  {t('contacts.formHeading', 'Напишіть нам')}
                 </h2>
                 <p className="m-0 text-xs text-muted">
-                  Відповімо протягом 30 хвилин у робочий час
+                  {t('contacts.formResponseTime', 'Відповімо протягом 30 хвилин у робочий час')}
                 </p>
               </div>
             </div>
@@ -307,9 +310,9 @@ export default function Contacts() {
                 <div className="flex items-start gap-2.5">
                   <Icon name="check-circle" size={18} className="mt-0.5 shrink-0 text-brand" />
                   <div>
-                    <strong className="font-bold">Повідомлення успішно надіслано!</strong>
+                    <strong className="font-bold">{t('contacts.successTitle', 'Повідомлення успішно надіслано!')}</strong>
                     <p className="m-0 mt-0.5 text-xs text-muted">
-                      Наш спеціаліст зв’яжеться з вами за вказаною електронною поштою або телефоном.
+                      {t('contacts.successSubtitle', 'Наш спеціаліст зв’яжеться з вами за вказаною електронною поштою або телефоном.')}
                     </p>
                   </div>
                 </div>
@@ -320,7 +323,7 @@ export default function Contacts() {
               {/* Name */}
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="contact-name" className="text-[13px] font-semibold text-brand-text">
-                  Ваше ім’я <span className="text-danger">*</span>
+                  {t('contacts.nameLabel', 'Ваше ім’я')} <span className="text-danger">*</span>
                 </label>
                 <input
                   id="contact-name"
@@ -328,7 +331,7 @@ export default function Contacts() {
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Олександр Коваленко"
+                  placeholder={t('contacts.namePlaceholder', 'Олександр Коваленко')}
                   aria-invalid={errors.name ? 'true' : undefined}
                   className={`h-12 w-full rounded-xl border px-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 ${
                     errors.name
@@ -342,7 +345,7 @@ export default function Contacts() {
               {/* Email */}
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="contact-email" className="text-[13px] font-semibold text-brand-text">
-                  Електронна пошта <span className="text-danger">*</span>
+                  {t('contacts.emailLabel', 'Електронна пошта')} <span className="text-danger">*</span>
                 </label>
                 <input
                   id="contact-email"
@@ -350,7 +353,7 @@ export default function Contacts() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="oleksandr@agro.ua"
+                  placeholder={t('contacts.emailPlaceholder', 'oleksandr@agro.ua')}
                   aria-invalid={errors.email ? 'true' : undefined}
                   className={`h-12 w-full rounded-xl border px-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 ${
                     errors.email
@@ -364,7 +367,7 @@ export default function Contacts() {
               {/* Phone (optional) */}
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="contact-phone" className="text-[13px] font-semibold text-brand-text">
-                  Номер телефону <span className="text-xs font-normal text-muted">(за бажанням)</span>
+                  {t('contacts.phoneLabel', 'Номер телефону')} <span className="text-xs font-normal text-muted">{t('contacts.phoneOptional', '(за бажанням)')}</span>
                 </label>
                 <input
                   id="contact-phone"
@@ -372,7 +375,7 @@ export default function Contacts() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="+380 50 123 4567"
+                  placeholder={t('contacts.phonePlaceholder', '+380 50 123 4567')}
                   className="h-12 w-full rounded-xl border border-border-main px-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 focus:border-brand focus:ring-3 focus:ring-brand/20"
                 />
               </div>
@@ -380,7 +383,7 @@ export default function Contacts() {
               {/* Subject */}
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="contact-subject" className="text-[13px] font-semibold text-brand-text">
-                  Тема звернення
+                  {t('contacts.subjectLabel', 'Тема звернення')}
                 </label>
                 <select
                   id="contact-subject"
@@ -389,18 +392,18 @@ export default function Contacts() {
                   onChange={handleChange}
                   className="h-12 w-full rounded-xl border border-border-main bg-white px-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-3 focus:ring-brand/20"
                 >
-                  <option value="Технічна підтримка">Технічна підтримка сервісу</option>
-                  <option value="Питання по сівозміні">Питання по сівозміні та культурах</option>
-                  <option value="Питання по картах">Питання по картах та розрахунках</option>
-                  <option value="Комерційна пропозиція">Комерційна пропозиція / Партнерство</option>
-                  <option value="Інше">Інше запитання</option>
+                  <option value="support">{t('contacts.subjects.support', 'Технічна підтримка сервісу')}</option>
+                  <option value="cropRotation">{t('contacts.subjects.cropRotation', 'Питання по сівозміні та культурах')}</option>
+                  <option value="maps">{t('contacts.subjects.maps', 'Питання по картах та розрахунках')}</option>
+                  <option value="partnership">{t('contacts.subjects.partnership', 'Комерційна пропозиція / Партнерство')}</option>
+                  <option value="other">{t('contacts.subjects.other', 'Інше запитання')}</option>
                 </select>
               </div>
 
               {/* Message */}
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="contact-message" className="text-[13px] font-semibold text-brand-text">
-                  Повідомлення <span className="text-danger">*</span>
+                  {t('contacts.messageLabel', 'Повідомлення')} <span className="text-danger">*</span>
                 </label>
                 <textarea
                   id="contact-message"
@@ -408,7 +411,7 @@ export default function Contacts() {
                   rows={4}
                   value={formData.message}
                   onChange={handleChange}
-                  placeholder="Опишіть ваше запитання або ситуацію з полем..."
+                  placeholder={t('contacts.messagePlaceholder', 'Опишіть ваше запитання або ситуацію з полем...')}
                   aria-invalid={errors.message ? 'true' : undefined}
                   className={`w-full rounded-xl border p-3.5 text-[15px] text-brand-text outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 resize-y ${
                     errors.message
@@ -421,13 +424,13 @@ export default function Contacts() {
 
               {/* Legal consent note */}
               <p className="m-0 text-[12px] leading-[1.4] text-muted">
-                Надсилаючи повідомлення, ви погоджуєтесь із{' '}
+                {t('contacts.legalConsentPrefix', 'Надсилаючи повідомлення, ви погоджуєтесь із')}{' '}
                 <AppLink href="/terms" className="font-medium text-brand-dark hover:underline">
-                  Умовами використання
+                  {t('infoLinks.terms', 'Умовами використання')}
                 </AppLink>{' '}
-                та{' '}
+                {t('contacts.legalConsentAnd', 'та')}{' '}
                 <AppLink href="/privacy" className="font-medium text-brand-dark hover:underline">
-                  Політикою конфіденційності
+                  {t('infoLinks.privacy', 'Політикою конфіденційності')}
                 </AppLink>
                 .
               </p>
@@ -439,7 +442,7 @@ export default function Contacts() {
                 className="mt-1 w-full gap-2 text-[16px]"
               >
                 <Icon name="send" size={18} />
-                <span>{isSubmitting ? 'Надсилання...' : 'Надіслати звернення'}</span>
+                <span>{isSubmitting ? t('contacts.submitting', 'Надсилання...') : t('contacts.submitBtn', 'Надіслати звернення')}</span>
               </Button>
             </form>
           </section>
@@ -450,18 +453,18 @@ export default function Contacts() {
       <section aria-labelledby="faq-heading" className="mt-16 border-t border-border-main pt-12 md:mt-20 md:pt-16">
         <div className="mb-8 text-center md:mb-12">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-dark uppercase">
-            Часті запитання
+            {t('contacts.faqBadge', 'Часті запитання')}
           </span>
           <h2 id="faq-heading" className="m-0 mt-2 text-2xl font-bold text-brand-text md:text-3xl">
-            Поширені запитання щодо зв’язку та сервісу
+            {t('contacts.faqHeading', 'Поширені запитання щодо зв’язку та сервісу')}
           </h2>
           <p className="m-0 mt-2 text-[15px] text-muted">
-            Знайдіть швидку відповідь на найбільш актуальні запитання фермерів
+            {t('contacts.faqSubtitle', 'Знайдіть швидку відповідь на найбільш актуальні запитання фермерів')}
           </p>
         </div>
 
         <div className="mx-auto max-w-3xl space-y-4">
-          {FAQS.map((faq, index) => {
+          {faqs.map((faq, index) => {
             const isExpanded = expandedFaq === index;
             return (
               <div
@@ -498,18 +501,18 @@ export default function Contacts() {
       <div className="mt-16 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border-main bg-white p-6 shadow-sm md:rounded-[20px] md:p-8">
         <div>
           <h3 className="m-0 text-base font-bold text-brand-text md:text-lg">
-            Бажаєте розпочати роботу з платформою SIVAY прямо зараз?
+            {t('contacts.bottomCtaTitle', 'Бажаєте розпочати роботу з платформою SIVAY прямо зараз?')}
           </h3>
           <p className="m-0 mt-1 text-[14px] text-muted">
-            Побудуйте точну сівозміну та розрахуйте прибутковість для вашого господарства.
+            {t('contacts.bottomCtaSubtitle', 'Побудуйте точну сівозміну та розрахуйте прибутковість для вашого господарства.')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button href="/" variant="secondary" arrow>
-            На головну
+            {t('contacts.bottomCtaHome', 'На головну')}
           </Button>
           <Button href="/analysis/new" arrow>
-            Розпочати аналіз
+            {t('contacts.bottomCtaAnalysis', 'Розпочати аналіз')}
           </Button>
         </div>
       </div>

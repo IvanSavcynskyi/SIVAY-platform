@@ -1,6 +1,7 @@
 import Button from '../Button/Button';
 import { useNotice } from '../Notice/useNotice';
 import { useAuth } from '../../context/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 import AuthField from './AuthField';
 import GoogleIcon from './GoogleIcon';
 import useAuthForm from './useAuthForm';
@@ -11,6 +12,7 @@ const VALIDATORS = { name: validateName, email: validateEmail, password: validat
 export default function SignUpForm({ onNavigate }) {
   const { showNotice } = useNotice();
   const { register } = useAuth();
+  const { t } = useLanguage();
   const { values, errors, formError, setFormError, submitting, handleChange, handleSubmit } =
     useAuthForm({ name: '', email: '', password: '' }, VALIDATORS);
 
@@ -18,73 +20,73 @@ export default function SignUpForm({ onNavigate }) {
     const result = await register(formValues);
 
     if (result.ok) {
-      showNotice('Акаунт успішно створено! Тепер увійдіть у свій акаунт.');
+      showNotice(t('auth.accountCreatedSuccess', 'Акаунт успішно створено! Тепер увійдіть у свій акаунт.'));
       onNavigate('signin');
       return;
     }
 
-    setFormError(result.message || 'Не вдалося створити акаунт. Спробуйте ще раз.');
+    setFormError(result.message || t('auth.signUpFailed', 'Не вдалося створити акаунт. Спробуйте ще раз.'));
   });
 
   return (
     <>
       <div className="flex flex-col gap-2">
         <h2 id="auth-modal-title" className="m-0 text-2xl font-bold leading-[1.2] text-brand-text focus:outline-none md:text-[28px]">
-          Створіть акаунт
+          {t('auth.createAccount', 'Створіть акаунт')}
         </h2>
         <p className="m-0 text-[15px] leading-[1.5] text-muted">
-          Зареєструйтеся, щоб аналізувати свої поля та отримувати рекомендації.
+          {t('auth.signUpSubtitle', 'Зареєструйтеся, щоб аналізувати свої поля та отримувати рекомендації.')}
         </p>
       </div>
 
       <Button
         variant="secondary"
         className="w-full gap-2.5 text-base md:gap-3 md:text-[17px]"
-        onClick={() => showNotice('Реєстрація через Google наразі не підключена на бекенді.')}
+        onClick={() => showNotice(t('auth.googleSignUpNotSupported', 'Реєстрація через Google наразі не підключена на бекенді.'))}
       >
         <span className="inline-flex items-center gap-2.5 md:gap-3">
           <GoogleIcon />
-          <span>Продовжити з Google</span>
+          <span>{t('auth.continueGoogle', 'Продовжити з Google')}</span>
         </span>
       </Button>
 
       <div className="flex items-center gap-3 text-[13px] leading-[1.4] text-muted before:h-px before:flex-1 before:bg-border-main after:h-px after:flex-1 after:bg-border-main">
-        <span>або</span>
+        <span>{t('common.or', 'або')}</span>
       </div>
 
       <form className="flex flex-col gap-4 md:gap-5" onSubmit={submit} noValidate>
         <div className="flex flex-col gap-3.5 md:gap-4">
           <AuthField
-            label="Ім’я"
+            label={t('auth.name', 'Ім’я')}
             icon="user"
             name="name"
             value={values.name}
             onChange={handleChange}
             error={errors.name}
-            placeholder="Ваше ім’я"
+            placeholder={t('auth.namePlaceholder', 'Ваше ім’я')}
             autoComplete="name"
             autoFocus
           />
           <AuthField
-            label="Електронна пошта"
+            label={t('auth.email', 'Електронна пошта')}
             icon="mail"
             name="email"
             type="email"
             value={values.email}
             onChange={handleChange}
             error={errors.email}
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder', 'you@example.com')}
             autoComplete="email"
           />
           <AuthField
-            label="Пароль"
+            label={t('auth.password', 'Пароль')}
             icon="lock-keyhole"
             name="password"
             type="password"
             value={values.password}
             onChange={handleChange}
             error={errors.password}
-            placeholder="Мінімум 8 символів"
+            placeholder={t('auth.newPasswordPlaceholder', 'Мінімум 8 символів')}
             autoComplete="new-password"
           />
         </div>
@@ -96,7 +98,7 @@ export default function SignUpForm({ onNavigate }) {
         )}
 
         <Button type="submit" arrow disabled={submitting} className="w-full">
-          {submitting ? 'Реєструємо…' : 'Зареєструватися'}
+          {submitting ? t('auth.signingUp', 'Реєструємо…') : t('header.signUp', 'Зареєструватися')}
         </Button>
       </form>
 
@@ -105,7 +107,8 @@ export default function SignUpForm({ onNavigate }) {
         className="w-full cursor-pointer border-0 bg-transparent py-2 text-center text-[15px] leading-[1.3] text-muted hover:[&>span]:underline"
         onClick={() => onNavigate('signin')}
       >
-        Уже маєте акаунт? <span className="font-semibold text-brand-dark">Увійти</span>
+        {t('auth.haveAccount', 'Уже маєте акаунт?')}{' '}
+        <span className="font-semibold text-brand-dark">{t('header.signIn', 'Увійти')}</span>
       </button>
     </>
   );
