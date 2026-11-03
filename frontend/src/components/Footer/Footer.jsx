@@ -80,19 +80,22 @@ export default function Footer() {
             </h2>
             <ul className="m-0 grid list-none grid-cols-7 justify-between gap-2 p-0 md:col-start-2 md:grid-cols-[repeat(7,48px)] md:justify-self-end md:gap-3 xl:col-auto xl:grid-cols-[repeat(4,56px)] xl:justify-start">
               {TEAM_MEMBERS.map((member) => (
-                <li
-                  key={member.id}
-                  className="grid aspect-square place-items-center overflow-hidden rounded-full border-2 border-white bg-brand-soft text-brand-dark"
-                  title={member.name}
-                >
-                  {member.avatar ? (
-                    <img src={member.avatar} alt={member.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <>
-                      <Icon name="user" className="h-[45%] w-[45%]" />
-                      <span className="sr-only">{member.name}</span>
-                    </>
-                  )}
+                <li key={member.id}>
+                  <AppLink
+                    href={ABOUT_LINK.href}
+                    ready={ABOUT_LINK.ready}
+                    className="grid aspect-square place-items-center overflow-hidden rounded-full border-2 border-white bg-brand-soft text-brand-dark transition-transform hover:scale-105"
+                    title={member.name}
+                  >
+                    {member.avatar ? (
+                      <img src={member.avatar} alt={member.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <>
+                        <Icon name="user" className="h-[45%] w-[45%]" />
+                        <span className="sr-only">{member.name}</span>
+                      </>
+                    )}
+                  </AppLink>
                 </li>
               ))}
             </ul>

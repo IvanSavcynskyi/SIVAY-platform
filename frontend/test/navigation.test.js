@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { navigate } from '../src/router/navigation.js';
-import { INFO_LINKS } from '../src/constants/siteLinks.js';
+import { ABOUT_LINK, INFO_LINKS } from '../src/constants/siteLinks.js';
 
 test('1. Router navigation: navigate updates history without throwing', () => {
   let pushStateCalled = false;
@@ -32,10 +32,11 @@ test('1. Router navigation: navigate updates history without throwing', () => {
   assert.equal(dispatchedEvent?.type, 'popstate');
 });
 
-test('2. Site links: Privacy, Terms, and Contacts are active and ready', () => {
+test('2. Site links: Privacy, Terms, Contacts, and Team are active and ready', () => {
   const privacyLink = INFO_LINKS.find((l) => l.id === 'privacy');
   const termsLink = INFO_LINKS.find((l) => l.id === 'terms');
   const contactsLink = INFO_LINKS.find((l) => l.id === 'contacts');
+  const teamLink = INFO_LINKS.find((l) => l.id === 'team');
 
   assert.ok(privacyLink, 'Privacy link must exist in INFO_LINKS');
   assert.equal(privacyLink.href, '/privacy');
@@ -48,4 +49,12 @@ test('2. Site links: Privacy, Terms, and Contacts are active and ready', () => {
   assert.ok(contactsLink, 'Contacts link must exist in INFO_LINKS');
   assert.equal(contactsLink.href, '/contacts');
   assert.equal(contactsLink.ready, true, 'Contacts link should be marked ready');
+
+  assert.ok(teamLink, 'Team link must exist in INFO_LINKS');
+  assert.equal(teamLink.href, '/about');
+  assert.equal(teamLink.ready, true, 'Team link should be marked ready');
+
+  assert.ok(ABOUT_LINK, 'ABOUT_LINK must exist');
+  assert.equal(ABOUT_LINK.href, '/about');
+  assert.equal(ABOUT_LINK.ready, true);
 });

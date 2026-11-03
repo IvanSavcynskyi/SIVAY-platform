@@ -5,6 +5,7 @@ import NewAnalysis from './pages/NewAnalysis/NewAnalysis';
 import Privacy from './pages/Privacy/Privacy';
 import Terms from './pages/Terms/Terms';
 import Contacts from './pages/Contacts/Contacts';
+import Team from './pages/Team/Team';
 import NotFound from './pages/NotFound/NotFound';
 
 const normalize = (pathname) => pathname.replace(/\/+$/, '') || '/';
@@ -25,6 +26,14 @@ export default function App() {
     return (
       <PublicLayout activeLink="home">
         <Home />
+      </PublicLayout>
+    );
+  }
+
+  if (currentPath === '/about' || currentPath === '/team') {
+    return (
+      <PublicLayout activeLink="none">
+        <Team />
       </PublicLayout>
     );
   }
