@@ -135,7 +135,7 @@ export default function Team() {
         </div>
 
         <h1 className="m-0 text-2xl font-bold leading-[1.15] text-brand-text md:text-4xl xl:text-[44px]">
-          {t('team.title', 'Наша команда')}
+          {t('team.title', 'Наша команда (тест)')}
         </h1>
 
         <p className="m-0 max-w-[840px] text-[15px] leading-[1.6] text-muted md:text-[17px]">
