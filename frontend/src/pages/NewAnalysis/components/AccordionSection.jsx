@@ -1,6 +1,8 @@
 import { IconCheck, IconChevronDown, IconChevronUp } from '../../../components/AnalysisIcons/AnalysisIcons';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export default function AccordionSection({ id, number, title, summary, status, open, onToggle, onChange, children }) {
+  const { t } = useLanguage();
   const locked = status === 'upcoming';
   const complete = status === 'complete';
 
@@ -44,12 +46,16 @@ export default function AccordionSection({ id, number, title, summary, status, o
           }`}
         >
           {complete && !open && <IconCheck size={14} />}
-          {open ? 'Поточний крок' : complete ? 'Заповнено' : 'Наступний крок'}
+          {open
+            ? t('analysisPage.accordion.currentStep', 'Поточний крок')
+            : complete
+              ? t('analysisPage.accordion.completed', 'Заповнено')
+              : t('analysisPage.accordion.nextStep', 'Наступний крок')}
         </span>
 
         {complete && !open && (
           <button type="button" className="hidden shrink-0 cursor-pointer text-[15px] font-semibold text-brand-dark hover:underline md:inline" onClick={onChange}>
-            Змінити
+            {t('analysisPage.accordion.change', 'Змінити')}
           </button>
         )}
 

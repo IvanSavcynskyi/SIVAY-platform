@@ -1,13 +1,15 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import Button from '../../../components/Button/Button';
 import { IconCheck, IconSearch, IconShield } from '../../../components/AnalysisIcons/AnalysisIcons';
-import { CROPS } from '../../../constants/crops';
+import { getLocalizedCrops } from '../../../constants/crops';
+import { useLanguage } from '../../../context/LanguageContext';
 import { listCropProposals, proposeCrop } from '../../../services/analysisApi';
 import { formatHa } from '../../../utils/format';
 import { INPUT_CLASS, InfoNote, LinkButton } from './ui';
 
 export default function CropsStep({ field, season, selectedIds, onChange, onBack, onEditSeason, onSubmit, submitting, result }) {
   const ids = useId();
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState('');
   const [proposalOpen, setProposalOpen] = useState(false);
   const [proposalName, setProposalName] = useState('');
@@ -28,21 +30,25 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
     };
   }, []);
 
+  const localizedCrops = useMemo(() => getLocalizedCrops(t), [t]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? CROPS.filter((c) => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : CROPS;
-  }, [query]);
+    return q
+      ? localizedCrops.filter((c) => c.name.toLowerCase().includes(q) || (c.group && c.group.toLowerCase().includes(q)))
+      : localizedCrops;
+  }, [query, localizedCrops]);
 
   const toggle = (id) => onChange(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
 
   const submitProposal = async () => {
     const name = proposalName.trim();
     if (name.length < 2) {
-      setProposalError('Вкажіть назву культури.');
+      setProposalError(t('analysisPage.cropsStep.proposalNameRequired'));
       return;
     }
-    if (CROPS.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
-      setProposalError('Така культура вже є у списку.');
+    if (localizedCrops.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+      setProposalError(t('analysisPage.cropsStep.proposalAlreadyExists'));
       return;
     }
     try {
@@ -52,41 +58,56 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
       setProposalError('');
       setProposalOpen(false);
     } catch (e) {
-      setProposalError(e.message || 'Не вдалося надіслати пропозицію.');
+      setProposalError(e.message || t('analysisPage.cropsStep.proposalFailed'));
     }
   };
 
   const seasonPlots = Array.isArray(season?.plots) ? season.plots.filter(Boolean) : [];
   const labels = seasonPlots.map((p) => p.label).join(', ');
 
+  const summaryItems = [
+    [t('analysisPage.cropsStep.fieldSummaryLabel'), `${field?.name || t('analysisPage.cropsStep.defaultField')} · ${formatHa(field?.areaHa, language)}`],
+    [t('analysisPage.cropsStep.seasonSummaryLabel'), String(season?.year ?? '—')],
+    [t('analysisPage.cropsStep.plotsSummaryLabel'), `${seasonPlots.length} — ${labels || '—'}`],
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl bg-surface-panel px-4 py-3.5 md:px-5">
-        {[
-          ['Поле', `${field?.name || 'Поле'} · ${formatHa(field?.areaHa)}`],
-          ['Сезон', String(season?.year ?? '—')],
-          ['Ділянки', `${seasonPlots.length} — ${labels || '—'}`],
-        ].map(([label, value]) => (
+        {summaryItems.map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[11px] font-bold tracking-[0.6px] text-muted uppercase">{label}</span>
             <span className="text-[14px] font-bold text-brand-text">{value}</span>
           </div>
         ))}
-        <LinkButton className="ml-auto min-h-10" onClick={onEditSeason}>Змінити</LinkButton>
+        <LinkButton className="ml-auto min-h-10" onClick={onEditSeason}>
+          {t('analysisPage.cropsStep.change')}
+        </LinkButton>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-7">
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex h-[52px] items-center gap-2.5 rounded-[14px] border-[1.5px] border-border-main bg-white px-4 focus-within:border-brand">
             <IconSearch size={18} className="text-muted" />
-            <label htmlFor={`${ids}-q`} className="sr-only">Пошук культури</label>
-            <input id={`${ids}-q`} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Пошук культури" className="min-w-0 flex-1 bg-transparent text-[15px] text-brand-text placeholder:text-muted" />
+            <label htmlFor={`${ids}-q`} className="sr-only">
+              {t('analysisPage.cropsStep.searchCropAria')}
+            </label>
+            <input
+              id={`${ids}-q`}
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('analysisPage.cropsStep.searchCropPlaceholder')}
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-brand-text placeholder:text-muted"
+            />
           </div>
 
           {filtered.length === 0 ? (
-            <p className="m-0 rounded-[14px] border border-border-soft p-4 text-[14px] text-muted" role="status">Нічого не знайдено. Запропонуйте власну культуру.</p>
+            <p className="m-0 rounded-[14px] border border-border-soft p-4 text-[14px] text-muted" role="status">
+              {t('analysisPage.cropsStep.noCropsFound')}
+            </p>
           ) : (
-            <ul className="m-0 list-none overflow-hidden rounded-[14px] border border-border-soft bg-white p-0" aria-label="Культури">
+            <ul className="m-0 list-none overflow-hidden rounded-[14px] border border-border-soft bg-white p-0" aria-label={t('analysisPage.cropsStep.cropsListAria')}>
               {filtered.map((crop) => {
                 const checked = selectedIds.includes(crop.id);
                 return (
@@ -108,28 +129,40 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
 
         <aside className="flex h-fit flex-col gap-3 rounded-2xl border border-[#bbf7d0] bg-brand-tint p-4">
           <div>
-            <h3 className="m-0 text-[15px] font-bold text-brand-text">Не знайшли потрібну культуру?</h3>
-            <p className="m-0 mt-1 text-[13px] leading-[1.5] text-muted">Запропонуйте свою. Вона з’явиться у списку лише після підтвердження адміністратором.</p>
+            <h3 className="m-0 text-[15px] font-bold text-brand-text">
+              {t('analysisPage.cropsStep.proposeTitle')}
+            </h3>
+            <p className="m-0 mt-1 text-[13px] leading-[1.5] text-muted">
+              {t('analysisPage.cropsStep.proposeDesc')}
+            </p>
           </div>
           {proposalOpen ? (
             <div className="flex flex-col gap-2">
-              <label htmlFor={`${ids}-p`} className="text-[13px] font-semibold text-brand-text">Назва культури</label>
+              <label htmlFor={`${ids}-p`} className="text-[13px] font-semibold text-brand-text">
+                {t('analysisPage.cropsStep.cropNameLabel')}
+              </label>
               <input id={`${ids}-p`} value={proposalName} onChange={(e) => setProposalName(e.target.value)} maxLength={60} className={INPUT_CLASS} />
               {proposalError && <p className="m-0 text-[13px] text-danger" role="alert">{proposalError}</p>}
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setProposalOpen(false)}>Скасувати</Button>
-                <Button size="sm" onClick={submitProposal}>Надіслати</Button>
+                <Button variant="secondary" size="sm" onClick={() => setProposalOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button size="sm" onClick={submitProposal}>
+                  {t('analysisPage.cropsStep.submitProposalBtn')}
+                </Button>
               </div>
             </div>
           ) : (
-            <Button variant="secondary" size="sm" className="w-full" onClick={() => setProposalOpen(true)}>Запропонувати власну культуру</Button>
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setProposalOpen(true)}>
+              {t('analysisPage.cropsStep.openProposalBtn')}
+            </Button>
           )}
           {proposals.length > 0 && (
             <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
               {proposals.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-2 rounded-[10px] bg-white px-3 py-2 text-[13px]">
                   <span className="truncate font-semibold text-brand-text">{p.name}</span>
-                  <span className="shrink-0 text-muted">Очікує підтвердження</span>
+                  <span className="shrink-0 text-muted">{t('analysisPage.cropsStep.pendingApproval')}</span>
                 </li>
               ))}
             </ul>
@@ -139,19 +172,28 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
 
       {result && (
         <InfoNote tone="success">
-          <strong>Дані для аналізу збережено (запит {result.id.slice(-6)}).</strong>
+          <strong>{t('analysisPage.cropsStep.resultNotice', { id: result.id.slice(-6) })}</strong>
           <br />
-          Розрахунок культур ще не підключено: на цьому кроці немає сервісу аналізу, тому результатів, прибутковості чи прогнозів тут немає навмисно.
+          {t('analysisPage.cropsStep.resultNoticeSub')}
         </InfoNote>
       )}
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <Button variant="secondary" className="w-full md:w-auto" onClick={onBack}>Назад до кроку 2</Button>
-          <p className="m-0 flex items-center gap-2 text-[13px] text-muted"><IconShield size={16} className="text-brand-dark" />Дані поля використовуються лише для цього розрахунку.</p>
+          <Button variant="secondary" className="w-full md:w-auto" onClick={onBack}>
+            {t('analysisPage.cropsStep.backToStep2')}
+          </Button>
+          <p className="m-0 flex items-center gap-2 text-[13px] text-muted">
+            <IconShield size={16} className="text-brand-dark" />
+            {t('analysisPage.cropsStep.privacyNotice')}
+          </p>
         </div>
         <Button className="w-full md:w-auto" arrow disabled={selectedIds.length === 0 || submitting} onClick={onSubmit}>
-          {submitting ? 'Зберігаємо…' : selectedIds.length ? `Перейти до аналізу (${selectedIds.length})` : 'Оберіть культури'}
+          {submitting
+            ? t('analysisPage.cropsStep.submitBtnSaving')
+            : selectedIds.length
+            ? t('analysisPage.cropsStep.submitBtnActive', { count: selectedIds.length })
+            : t('analysisPage.cropsStep.submitBtnEmpty')}
         </Button>
       </div>
     </div>

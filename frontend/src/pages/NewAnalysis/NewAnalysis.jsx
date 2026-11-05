@@ -15,7 +15,7 @@ import SeasonsStep from './components/SeasonsStep';
 export default function NewAnalysis() {
   const { isAuthenticated, isLoading } = useAuth();
   const { openAuth } = useAuthModal();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -76,15 +76,15 @@ export default function NewAnalysis() {
         }),
       );
     } catch (e) {
-      setSubmitError(e.message || 'Не вдалося зберегти дані.');
+      setSubmitError(e.message || t('analysisPage.errors.saveDataError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const step2Summary = season
-    ? `${t('analysisPage.step2SeasonPrefix', 'Сезон')} ${season.year} · ${seasonPlots.length} ${plotsWord(seasonPlots.length)} · ${formatHa(totalAreaHa(seasonPlots))} · ${seasonPlots
-        .map((p) => `${p.label} — ${getCropName(p.cropId) ?? t('analysisPage.step2NotSpecified', 'не вказано')}`)
+    ? `${t('analysisPage.step2SeasonPrefix', 'Сезон')} ${season.year} · ${seasonPlots.length} ${plotsWord(seasonPlots.length, language)} · ${formatHa(totalAreaHa(seasonPlots), language)} · ${seasonPlots
+        .map((p) => `${p.label} — ${getCropName(p.cropId, t) ?? t('analysisPage.step2NotSpecified', 'не вказано')}`)
         .join(', ')}`
     : t('analysisPage.step2SummaryDefault', 'Сезони, поділ поля на ділянки та культури, що на них росли.');
 
@@ -121,11 +121,14 @@ export default function NewAnalysis() {
           title={t('analysisPage.step1Title', 'Оберіть поле')}
           summary={
             field
-              ? `${field.name} · ${formatHa(field.areaHa)}${field.region ? ` · ${field.region}` : ''}`
+              ? `${field.name} · ${formatHa(field.areaHa, language)}${field.region ? ` · ${field.region}` : ''}`
               : t('analysisPage.step1SummaryDefault', 'Знайдіть населений пункт на карті — це лише переміщення до місця. Далі позначте межі свого поля.')
           }
         >
-          <ErrorBoundary title="Помилка при виборі поля" message="Не вдалося відобразити карту або вибір поля. Спробуйте оновити сторінку.">
+          <ErrorBoundary
+            title={t('analysisPage.errors.fieldErrorTitle')}
+            message={t('analysisPage.errors.fieldErrorMessage')}
+          >
             <FieldStep onFieldReady={handleFieldReady} />
           </ErrorBoundary>
         </AccordionSection>
@@ -135,7 +138,10 @@ export default function NewAnalysis() {
           title={t('analysisPage.step2Title', 'Ділянки та попередні культури')}
           summary={step2Summary}
         >
-          <ErrorBoundary title="Помилка при налаштуванні сезонів" message="Не вдалося відобразити ділянки цього сезону.">
+          <ErrorBoundary
+            title={t('analysisPage.errors.seasonsErrorTitle')}
+            message={t('analysisPage.errors.seasonsErrorMessage')}
+          >
             {field && <SeasonsStep key={field.id} field={field} onFieldChange={setField} onConfirm={handleSeasonConfirm} />}
           </ErrorBoundary>
         </AccordionSection>
@@ -149,7 +155,10 @@ export default function NewAnalysis() {
               : t('analysisPage.step3SummaryDefault', 'Оберіть культури, які SIVAY порівняє для цього поля та сезону. Можна вибрати кілька.')
           }
         >
-          <ErrorBoundary title="Помилка при виборі культур" message="Не вдалося завантажити перелік культур.">
+          <ErrorBoundary
+            title={t('analysisPage.errors.cropsErrorTitle')}
+            message={t('analysisPage.errors.cropsErrorMessage')}
+          >
             {season && (
               <CropsStep
                 field={field}

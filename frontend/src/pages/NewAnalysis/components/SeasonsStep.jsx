@@ -2,31 +2,27 @@ import { useMemo, useRef, useState } from 'react';
 import Button from '../../../components/Button/Button';
 import GoogleMapView from '../../../components/GoogleMap/GoogleMapView';
 import { DrawLineLayer, FieldBoundaryLayer, PlotsLayer } from '../../../components/GoogleMap/MapLayers';
-import { CROPS, getCropName } from '../../../constants/crops';
+import { getCropName, getLocalizedCrops } from '../../../constants/crops';
+import { useLanguage } from '../../../context/LanguageContext';
 import { createSeason, saveCropRecord, saveSeasonLayout } from '../../../services/analysisApi';
 import { formatHa, plotsWord } from '../../../utils/format';
 import { pathBounds } from '../../../utils/geo';
 import { MAX_PLOTS, mergePlots, movePlotVertex, removePlot, splitPlotsByLine, totalAreaHa, withColors } from '../lib/plots';
 import { Chip, INPUT_CLASS, InfoNote, PlotBadge } from './ui';
 
-const TOOLS = [
-  ['split', 'Лінія розрізу'],
-  ['merge', 'Об’єднати ділянки'],
-  ['boundaries', 'Редагувати межі'],
-  ['delete', 'Видалити ділянку'],
-];
 const NO_IDS = [];
 
-function Legend() {
+function Legend({ t }) {
   return (
     <div className="rounded-xl bg-white px-3 py-2 text-[12px] font-semibold text-brand-text shadow-[0_3px_5px_rgba(8,46,32,0.1)]">
-      <div className="flex items-center gap-2"><span className="h-[3px] w-4 rounded bg-brand" />Межа поля</div>
-      <div className="mt-1 flex items-center gap-2"><span className="h-3 w-4 rounded-sm bg-[#bfd4fb]" />Ділянки сезону</div>
+      <div className="flex items-center gap-2"><span className="h-[3px] w-4 rounded bg-brand" />{t('analysisPage.seasonsStep.legendField')}</div>
+      <div className="mt-1 flex items-center gap-2"><span className="h-3 w-4 rounded-sm bg-[#bfd4fb]" />{t('analysisPage.seasonsStep.legendPlots')}</div>
     </div>
   );
 }
 
 export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
+  const { t, language } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const fieldSeasons = field?.seasons;
@@ -76,6 +72,8 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   );
   const cropPlot = plots.find((p) => p.id === cropPlotId);
 
+  const localizedCrops = useMemo(() => getLocalizedCrops(t), [t]);
+
   const setEdit = (next) => {
     editPlotsRef.current = next;
     setEditPlots(next);
@@ -87,7 +85,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
     try {
       await task();
     } catch (e) {
-      error(e.message || 'Сталася помилка. Спробуйте ще раз.');
+      error(e.message || t('analysisPage.seasonsStep.notices.genericError'));
     } finally {
       setBusy(false);
     }
@@ -116,7 +114,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
     run(async () => {
       onFieldChange(await saveCropRecord(field.id, effectiveYear, cropPlotId, cropDraft || null));
       setMode('view');
-      info(`Запис культури для ділянки ${cropPlot?.label || ''} збережено.`);
+      info(t('analysisPage.seasonsStep.notices.cropSaved', { label: cropPlot?.label || '' }));
     });
 
   const startEdit = () => {
@@ -124,36 +122,36 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
     setTool('split');
     setMergeSel(NO_IDS);
     setMode('edit');
-    info('Проведіть лінію через поле: клацніть у двох місцях. Лінія розділить усі ділянки, які перетинає.');
+    info(t('analysisPage.seasonsStep.hints.splitInit'));
   };
 
   const confirmEdit = () =>
     run(async () => {
       onFieldChange(await saveSeasonLayout(field.id, effectiveYear, editPlotsRef.current));
       setMode('view');
-      info(`Розбивку сезону ${effectiveYear} збережено. Інші сезони не змінено.`);
+      info(t('analysisPage.seasonsStep.notices.layoutSaved', { year: effectiveYear }));
     });
 
   const pickTool = (next) => {
     setTool(next);
     setMergeSel(NO_IDS);
     const hints = {
-      split: 'Клацніть у двох місцях карти — лінія розділить усі ділянки, які вона перетинає.',
-      merge: 'Оберіть на карті дві сусідні ділянки та натисніть «Об’єднати вибрані».',
-      boundaries: 'Перетягуйте точки меж між ділянками. Зовнішня межа поля незмінна.',
-      delete: 'Натисніть ділянку на карті або «Видалити» у списку. Ділянки із записом культури видалити не можна.',
+      split: t('analysisPage.seasonsStep.hints.split'),
+      merge: t('analysisPage.seasonsStep.hints.merge'),
+      boundaries: t('analysisPage.seasonsStep.hints.boundaries'),
+      delete: t('analysisPage.seasonsStep.hints.delete'),
     };
     info(hints[next]);
   };
 
   const handleSplit = (a, b) => {
     if (editPlotsRef.current.length >= MAX_PLOTS) {
-      error(`Максимум ${MAX_PLOTS} ділянок.`);
+      error(t('analysisPage.seasonsStep.notices.maxPlots', { max: MAX_PLOTS }));
       return;
     }
     const result = splitPlotsByLine(editPlotsRef.current, a, b);
     if (result.splitCount === 0) {
-      error('Лінія не розділила жодної ділянки. Проведіть її через поле.');
+      error(t('analysisPage.seasonsStep.notices.splitNoCut'));
       return;
     }
     setEdit(result.plots);
@@ -200,24 +198,31 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
       onFieldChange(updated);
       setActiveYear(targetYear);
       setMode('view');
-      info(`Сезон ${targetYear} створено. Попередні сезони лишилися без змін.`);
+      info(t('analysisPage.seasonsStep.notices.seasonCreated', { year: targetYear }));
     });
 
   const otherYears = years.filter((y) => y !== effectiveYear).reverse();
   const summarize = (y) => {
     const s = field?.seasons?.[y];
     if (!s || !Array.isArray(s.plots)) return '—';
-    return s.plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
+    return s.plots.map((p) => `${p.label} ${getCropName(p.cropId, t) ?? '—'}`).join(' · ');
   };
   const selectedIds = mode === 'crop' && cropPlotId ? [cropPlotId] : editing && tool === 'merge' ? mergeSel : NO_IDS;
   const interactive = mode === 'view' || mode === 'crop' || (editing && (tool === 'merge' || tool === 'delete'));
+
+  const toolsList = [
+    ['split', t('analysisPage.seasonsStep.tools.split')],
+    ['merge', t('analysisPage.seasonsStep.tools.merge')],
+    ['boundaries', t('analysisPage.seasonsStep.tools.boundaries')],
+    ['delete', t('analysisPage.seasonsStep.tools.delete')],
+  ];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-[13px] font-semibold text-muted">Сезон</span>
-          <div role="tablist" aria-label="Сезон" className="flex flex-1 gap-1 rounded-[14px] border border-border-soft bg-surface-panel p-1 md:flex-none">
+          <span className="text-[13px] font-semibold text-muted">{t('analysisPage.seasonsStep.seasonLabel')}</span>
+          <div role="tablist" aria-label={t('analysisPage.seasonsStep.seasonLabel')} className="flex flex-1 gap-1 rounded-[14px] border border-border-soft bg-surface-panel p-1 md:flex-none">
             {years.map((y) => (
               <button
                 key={y}
@@ -245,13 +250,13 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
             setNotice(null);
           }}
         >
-          Додати попередній сезон
+          {t('analysisPage.seasonsStep.addPrevSeasonBtn')}
         </Button>
       </div>
 
       {editing && (
-        <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Інструменти розбивки">
-          {TOOLS.map(([id, label]) => (
+        <div className="flex flex-wrap gap-2" role="toolbar" aria-label={t('analysisPage.seasonsStep.toolbarAria')}>
+          {toolsList.map(([id, label]) => (
             <Chip key={id} active={tool === id} onClick={() => pickTool(id)}>{label}</Chip>
           ))}
         </div>
@@ -261,9 +266,9 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
         <GoogleMapView
           className="h-[340px] md:h-[440px] xl:h-[520px]"
           focus={focus}
-          badge={editing ? 'Межа поля — незмінна' : 'Межа поля — постійна'}
-          legend={<Legend />}
-          ariaLabel={`Карта ділянок сезону ${effectiveYear}`}
+          badge={editing ? t('analysisPage.seasonsStep.mapBadgeEditing') : t('analysisPage.seasonsStep.mapBadgeViewing')}
+          legend={<Legend t={t} />}
+          ariaLabel={t('analysisPage.seasonsStep.mapAria', { year: effectiveYear })}
         >
           <FieldBoundaryLayer path={field.boundary} showVertices />
           <PlotsLayer
@@ -273,7 +278,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
             editable={editing && tool === 'boundaries'}
             onPlotClick={handlePlotClick}
             onVertexMove={handleVertexMove}
-            onStructureChange={() => error('Додавати чи видаляти точки не можна — лише переміщувати наявні.')}
+            onStructureChange={() => error(t('analysisPage.seasonsStep.notices.noAddOrRemovePoints'))}
           />
           {editing && tool === 'split' && <DrawLineLayer onComplete={handleSplit} />}
         </GoogleMapView>
@@ -282,30 +287,46 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
           {mode === 'view' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Ділянки сезону {effectiveYear}</h3>
-                <p className="m-0 mt-0.5 text-[14px] text-muted">{plots.length} {plotsWord(plots.length)} · {formatHa(totalAreaHa(plots))}</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">
+                  {t('analysisPage.seasonsStep.plotsTitle', { year: effectiveYear })}
+                </h3>
+                <p className="m-0 mt-0.5 text-[14px] text-muted">
+                  {plots.length} {plotsWord(plots.length, language)} · {formatHa(totalAreaHa(plots), language)}
+                </p>
               </div>
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                 {plots.map((p) => (
                   <li key={p.id} className="flex min-h-[56px] items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2">
                     <PlotBadge label={p.label} />
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{getCropName(p.cropId) ?? 'Культуру не вказано'}</div>
-                      <div className="text-[13px] text-muted">{formatHa(p.areaHa)}</div>
+                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>
+                        {getCropName(p.cropId, t) ?? t('analysisPage.seasonsStep.cropNotSpecified')}
+                      </div>
+                      <div className="text-[13px] text-muted">{formatHa(p.areaHa, language)}</div>
                     </div>
-                    <button type="button" className="min-h-10 cursor-pointer px-1 text-[14px] font-bold text-brand-dark hover:underline" onClick={() => openCrop(p.id)}>Змінити</button>
+                    <button
+                      type="button"
+                      className="min-h-10 cursor-pointer px-1 text-[14px] font-bold text-brand-dark hover:underline"
+                      onClick={() => openCrop(p.id)}
+                    >
+                      {t('analysisPage.seasonsStep.change')}
+                    </button>
                   </li>
                 ))}
               </ul>
               <InfoNote tone="success">
-                <strong>Межі ділянок — окремо для кожного року</strong>
+                <strong>{t('analysisPage.seasonsStep.independentPlotsTitle')}</strong>
                 <br />
-                <span className="text-muted">Однакові літери в різні роки — різні території. Історичні розбивки не змінюються автоматично.</span>
+                <span className="text-muted">{t('analysisPage.seasonsStep.independentPlotsDesc')}</span>
               </InfoNote>
               {canEditLayout && (
                 <div className="flex flex-col gap-2.5">
-                  <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку</Button>
-                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>Далі: культури сезону {effectiveYear}</Button>
+                  <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>
+                    {t('analysisPage.seasonsStep.editDivision')}
+                  </Button>
+                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>
+                    {t('analysisPage.seasonsStep.nextCrops', { year: effectiveYear })}
+                  </Button>
                 </div>
               )}
             </>
@@ -314,38 +335,60 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
           {mode === 'crop' && cropPlot && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Культура ділянки {cropPlot.label} · {effectiveYear}</h3>
-                <p className="m-0 mt-0.5 text-[14px] text-muted">{formatHa(cropPlot.areaHa)} · запис належить сезону {effectiveYear} та цій ділянці.</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">
+                  {t('analysisPage.seasonsStep.cropTitle', { label: cropPlot.label, year: effectiveYear })}
+                </h3>
+                <p className="m-0 mt-0.5 text-[14px] text-muted">
+                  {formatHa(cropPlot.areaHa, language)} · {t('analysisPage.seasonsStep.cropDesc', { year: effectiveYear })}
+                </p>
               </div>
               <div className="flex flex-col gap-2">
-                <label htmlFor="crop-select" className="text-[13px] font-semibold text-brand-text">Культура, що росла в сезоні {effectiveYear}</label>
+                <label htmlFor="crop-select" className="text-[13px] font-semibold text-brand-text">
+                  {t('analysisPage.seasonsStep.cropSelectLabel', { year: effectiveYear })}
+                </label>
                 <select id="crop-select" className={INPUT_CLASS} value={cropDraft} onChange={(e) => setCropDraft(e.target.value)}>
-                  <option value="">Не вказано</option>
-                  {CROPS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <option value="">{t('analysisPage.seasonsStep.cropNotSet')}</option>
+                  {localizedCrops.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="flex flex-wrap gap-2">
-                {CROPS.slice(0, 6).map((c) => (
+                {localizedCrops.slice(0, 6).map((c) => (
                   <Chip key={c.id} active={cropDraft === c.id} onClick={() => setCropDraft(cropDraft === c.id ? '' : c.id)}>{c.name}</Chip>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="secondary" size="sm" onClick={() => setMode('view')}>Скасувати</Button>
-                <Button size="sm" disabled={busy} onClick={saveCrop}>Зберегти</Button>
+                <Button variant="secondary" size="sm" onClick={() => setMode('view')}>
+                  {t('common.cancel')}
+                </Button>
+                <Button size="sm" disabled={busy} onClick={saveCrop}>
+                  {t('common.save')}
+                </Button>
               </div>
               {otherYears.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <h4 className="m-0 text-[13px] font-bold text-brand-text">Записи інших сезонів</h4>
+                  <h4 className="m-0 text-[13px] font-bold text-brand-text">
+                    {t('analysisPage.seasonsStep.otherSeasonsTitle')}
+                  </h4>
                   {otherYears.map((y) => (
                     <div key={y} className="flex items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2.5">
                       <div className="min-w-0 flex-1">
-                        <div className="text-[14px] font-bold text-brand-text">{y} · {field?.seasons?.[y]?.plots?.length || 0} {plotsWord(field?.seasons?.[y]?.plots?.length || 0)}</div>
+                        <div className="text-[14px] font-bold text-brand-text">
+                          {y} · {field?.seasons?.[y]?.plots?.length || 0} {plotsWord(field?.seasons?.[y]?.plots?.length || 0, language)}
+                        </div>
                         <div className="truncate text-[13px] text-muted">{summarize(y)}</div>
                       </div>
-                      <button type="button" className="min-h-10 cursor-pointer px-1 text-[13px] font-bold text-brand-dark hover:underline" onClick={() => selectYear(y)}>Переглянути</button>
+                      <button
+                        type="button"
+                        className="min-h-10 cursor-pointer px-1 text-[13px] font-bold text-brand-dark hover:underline"
+                        onClick={() => selectYear(y)}
+                      >
+                        {t('analysisPage.seasonsStep.viewSeason')}
+                      </button>
                     </div>
                   ))}
-                  <p className="m-0 text-[12.5px] leading-[1.5] text-muted">Літери ділянок у різних роках — різні території, тому записи не об’єднуються.</p>
+                  <p className="m-0 text-[12.5px] leading-[1.5] text-muted">
+                    {t('analysisPage.seasonsStep.otherSeasonsHint')}
+                  </p>
                 </div>
               )}
             </>
@@ -354,16 +397,22 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
           {editing && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Редагування розбивки · {effectiveYear}</h3>
-                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Зміни стосуються лише сезону {effectiveYear}.</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">
+                  {t('analysisPage.seasonsStep.editingTitle', { year: effectiveYear })}
+                </h3>
+                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">
+                  {t('analysisPage.seasonsStep.editingDesc', { year: effectiveYear })}
+                </p>
               </div>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {plots.map((p) => (
                   <li key={p.id} className="flex min-h-[52px] items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2">
                     <PlotBadge label={p.label} />
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{getCropName(p.cropId) ?? 'Культуру не вказано'}</div>
-                      <div className="text-[13px] text-muted">{formatHa(p.areaHa)}</div>
+                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>
+                        {getCropName(p.cropId, t) ?? t('analysisPage.seasonsStep.cropNotSpecified')}
+                      </div>
+                      <div className="text-[13px] text-muted">{formatHa(p.areaHa, language)}</div>
                     </div>
                     <button
                       type="button"
@@ -371,16 +420,22 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                       className="min-h-10 cursor-pointer px-1 text-[14px] font-bold text-brand-dark hover:underline disabled:cursor-not-allowed disabled:text-muted/50 disabled:no-underline"
                       onClick={() => handleDelete(p.id)}
                     >
-                      Видалити
+                      {t('analysisPage.seasonsStep.deletePlot')}
                     </button>
                   </li>
                 ))}
               </ul>
               {plots.some((p) => p.cropId) && (
-                <p className="m-0 text-[12.5px] text-muted">Видалення недоступне для ділянок із записом культури ({plots.filter((p) => p.cropId).map((p) => p.label).join(', ')}).</p>
+                <p className="m-0 text-[12.5px] text-muted">
+                  {t('analysisPage.seasonsStep.cannotDeleteWithCrop', {
+                    plots: plots.filter((p) => p.cropId).map((p) => p.label).join(', '),
+                  })}
+                </p>
               )}
               {tool === 'merge' && (
-                <Button variant="secondary" size="sm" disabled={mergeSel.length !== 2} onClick={handleMerge}>Об’єднати вибрані</Button>
+                <Button variant="secondary" size="sm" disabled={mergeSel.length !== 2} onClick={handleMerge}>
+                  {t('analysisPage.seasonsStep.mergeSelected')}
+                </Button>
               )}
               <button
                 type="button"
@@ -388,11 +443,15 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                 disabled={plots.length >= MAX_PLOTS}
                 onClick={() => pickTool('split')}
               >
-                + Додати ділянку
+                {t('analysisPage.seasonsStep.addPlotBtn')}
               </button>
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="secondary" size="sm" onClick={() => { setMode('view'); setNotice(null); }}>Скасувати</Button>
-                <Button size="sm" disabled={busy} onClick={confirmEdit}>Підтвердити</Button>
+                <Button variant="secondary" size="sm" onClick={() => { setMode('view'); setNotice(null); }}>
+                  {t('common.cancel')}
+                </Button>
+                <Button size="sm" disabled={busy} onClick={confirmEdit}>
+                  {t('analysisPage.seasonsStep.confirmBtn')}
+                </Button>
               </div>
             </>
           )}
@@ -400,12 +459,16 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
           {mode === 'newSeason' && (
             <>
               <div>
-                <h3 className="m-0 text-lg font-bold text-brand-text">Попередній сезон {earliestYear - 1}</h3>
-                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">Межі ділянок кожного року окремі. Попередні сезони не зміняться.</p>
+                <h3 className="m-0 text-lg font-bold text-brand-text">
+                  {t('analysisPage.seasonsStep.newSeasonTitle', { year: earliestYear - 1 })}
+                </h3>
+                <p className="m-0 mt-0.5 text-[14px] leading-[1.5] text-muted">
+                  {t('analysisPage.seasonsStep.newSeasonDesc')}
+                </p>
               </div>
               {[
-                ['copy', `Скопіювати розбивку найближчого сезону (${earliestYear})`, 'Ті самі ділянки, але без записів культур — далі їх можна змінити.'],
-                ['single', 'Одне поле без розбивки', 'Весь контур поля як одна ділянка.'],
+                ['copy', t('analysisPage.seasonsStep.modeCopyTitle', { year: earliestYear }), t('analysisPage.seasonsStep.modeCopyDesc')],
+                ['single', t('analysisPage.seasonsStep.modeSingleTitle'), t('analysisPage.seasonsStep.modeSingleDesc')],
               ].map(([id, title, text]) => (
                 <label key={id} className={`flex min-h-[64px] cursor-pointer items-start gap-3 rounded-[14px] border p-3.5 ${newSeasonMode === id ? 'border-brand bg-brand-tint' : 'border-border-main bg-white'}`}>
                   <input type="radio" name="new-season-mode" className="mt-1 h-4 w-4 accent-[#19c463]" checked={newSeasonMode === id} onChange={() => setNewSeasonMode(id)} />
@@ -416,8 +479,12 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                 </label>
               ))}
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="secondary" size="sm" onClick={() => setMode('view')}>Скасувати</Button>
-                <Button size="sm" disabled={busy} onClick={handleNewSeason}>Створити сезон</Button>
+                <Button variant="secondary" size="sm" onClick={() => setMode('view')}>
+                  {t('common.cancel')}
+                </Button>
+                <Button size="sm" disabled={busy} onClick={handleNewSeason}>
+                  {t('analysisPage.seasonsStep.createSeasonBtn')}
+                </Button>
               </div>
             </>
           )}

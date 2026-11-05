@@ -1,10 +1,17 @@
-export function formatHa(value) {
+export function formatHa(value, language = 'uk') {
   const n = typeof value === 'number' && Number.isFinite(value) ? value : 0;
-  return `${(Math.round(n * 10) / 10).toFixed(1).replace('.', ',')} га`;
+  const formatted = (Math.round(n * 10) / 10).toFixed(1);
+  if (language === 'en') {
+    return `${formatted} ha`;
+  }
+  return `${formatted.replace('.', ',')} га`;
 }
 
-export function plotsWord(n) {
+export function plotsWord(n, language = 'uk') {
   const num = typeof n === 'number' && Number.isFinite(n) ? Math.floor(Math.abs(n)) : 0;
+  if (language === 'en') {
+    return num === 1 ? 'plot' : 'plots';
+  }
   const m10 = num % 10;
   const m100 = num % 100;
   if (m10 === 1 && m100 !== 11) return 'ділянка';
