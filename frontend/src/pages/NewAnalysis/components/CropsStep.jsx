@@ -78,7 +78,7 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl bg-surface-panel px-4 py-3.5 md:px-5">
         {[
           ['Поле', `${field?.name || 'Поле'} · ${formatHa(field?.areaHa)}`],
-          ['Сезон', String(season?.year ?? '—')],
+          ['Сезон', String(season?.year ?? new Date().getFullYear())],
           ['Ділянки', `${seasonPlots.length} — ${labels || '—'}`],
         ].map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">

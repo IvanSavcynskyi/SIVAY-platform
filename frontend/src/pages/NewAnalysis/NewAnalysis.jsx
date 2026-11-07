@@ -60,7 +60,12 @@ export default function NewAnalysis() {
   };
 
   const handleSeasonConfirm = (year) => {
-    setSeasonYear(year);
+    const currentYear = new Date().getFullYear();
+    const targetYear =
+      field?.seasons && currentYear in field.seasons
+        ? currentYear
+        : (year ?? (field?.seasons && Object.keys(field.seasons).length > 0 ? Math.max(...Object.keys(field.seasons).map(Number)) : currentYear));
+    setSeasonYear(targetYear);
     setResult(null);
     setOpenStep(3);
   };

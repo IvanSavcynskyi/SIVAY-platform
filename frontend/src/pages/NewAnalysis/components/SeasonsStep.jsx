@@ -41,6 +41,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
 
   const latestYear = years[0] ?? currentYear;
   const earliestYear = years.length > 0 ? years[years.length - 1] : currentYear;
+  const targetSeasonYear = field?.seasons && currentYear in field.seasons ? currentYear : latestYear;
 
   const [activeYear, setActiveYear] = useState(() => latestYear);
 
@@ -322,7 +323,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
               {canEditLayout && (
                 <div className="flex flex-col gap-2.5">
                   <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку</Button>
-                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>Перейти до наступного кроку</Button>
+                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(targetSeasonYear)}>Перейти до наступного кроку</Button>
                 </div>
               )}
             </>
