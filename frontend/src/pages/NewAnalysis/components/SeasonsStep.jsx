@@ -317,12 +317,12 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
               <InfoNote tone="success">
                 <strong>Межі ділянок — окремо для кожного року</strong>
                 <br />
-                <span className="text-muted">Однакові літери в різні роки — різні території. Історичні розбивки не змінюються автоматично.</span>
+                <span className="text-muted">Однакові літери в різні роки - різні території. Історичні розбивки не змінюються автоматично.</span>
               </InfoNote>
               {canEditLayout && (
                 <div className="flex flex-col gap-2.5">
                   <Button variant="secondary" size="sm" className="w-full" onClick={startEdit}>Редагувати розбивку</Button>
-                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>Далі: культури сезону {effectiveYear}</Button>
+                  <Button className="h-[52px] w-full text-base" arrow onClick={() => onConfirm(effectiveYear)}>Перейти до наступного кроку</Button>
                 </div>
               )}
             </>
@@ -362,7 +362,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                       <button type="button" className="min-h-10 cursor-pointer px-1 text-[13px] font-bold text-brand-dark hover:underline" onClick={() => selectYear(y)}>Переглянути</button>
                     </div>
                   ))}
-                  <p className="m-0 text-[12.5px] leading-[1.5] text-muted">Літери ділянок у різних роках — різні території, тому записи не об’єднуються.</p>
+                  <p className="m-0 text-[12.5px] leading-[1.5] text-muted">Літери ділянок у різних роках - різні території, тому записи не об’єднуються.</p>
                 </div>
               )}
             </>
