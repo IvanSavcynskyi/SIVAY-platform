@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../components/Button/Button';
 import GoogleMapView from '../../../components/GoogleMap/GoogleMapView';
 import { DrawLineLayer, FieldBoundaryLayer, PlotsLayer } from '../../../components/GoogleMap/MapLayers';
 import { CROPS, getCropName } from '../../../constants/crops';
+import { listCrops } from '../../../services/cropsApi';
 import { createSeason, saveCropRecord, saveSeasonLayout } from '../../../services/analysisApi';
 import { formatHa, plotsWord } from '../../../utils/format';
 import { pathBounds } from '../../../utils/geo';
@@ -53,6 +54,21 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const [mode, setMode] = useState('view');
   const [cropPlotId, setCropPlotId] = useState(null);
   const [cropDraft, setCropDraft] = useState('');
+  const [cropsList, setCropsList] = useState(CROPS);
+
+  useEffect(() => {
+    let cancelled = false;
+    listCrops().then((list) => {
+      if (!cancelled && Array.isArray(list) && list.length > 0) {
+        setCropsList(list);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cropNameOf = (id) => getCropName(id, cropsList);
   const [editPlots, setEditPlots] = useState([]);
   const editPlotsRef = useRef([]);
   const [tool, setTool] = useState('split');
@@ -104,17 +120,18 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   };
 
   const openCrop = (plotId) => {
-    const plot = seasonPlots.find((p) => p.id === plotId);
+    const plot = seasonPlots.find((p) => String(p.id) === String(plotId));
     if (!plot) return;
     setCropPlotId(plotId);
-    setCropDraft(plot.cropId ?? '');
+    setCropDraft(plot.cropId != null ? String(plot.cropId) : '');
     setMode('crop');
     setNotice(null);
   };
 
   const saveCrop = () =>
     run(async () => {
-      onFieldChange(await saveCropRecord(field.id, effectiveYear, cropPlotId, cropDraft || null));
+      const cropVal = cropDraft ? (Number(cropDraft) || cropDraft) : null;
+      onFieldChange(await saveCropRecord(field, effectiveYear, cropPlotId, cropVal));
       setMode('view');
       info(`Запис культури для ділянки ${cropPlot?.label || ''} збережено.`);
     });
@@ -129,7 +146,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
 
   const confirmEdit = () =>
     run(async () => {
-      onFieldChange(await saveSeasonLayout(field.id, effectiveYear, editPlotsRef.current));
+      onFieldChange(await saveSeasonLayout(field, effectiveYear, editPlotsRef.current));
       setMode('view');
       info(`Розбивку сезону ${effectiveYear} збережено. Інші сезони не змінено.`);
     });
@@ -196,7 +213,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const handleNewSeason = () =>
     run(async () => {
       const targetYear = earliestYear - 1;
-      const updated = await createSeason(field.id, { mode: newSeasonMode, year: targetYear });
+      const updated = await createSeason(field, { mode: newSeasonMode, year: targetYear });
       onFieldChange(updated);
       setActiveYear(targetYear);
       setMode('view');
@@ -207,7 +224,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
   const summarize = (y) => {
     const s = field?.seasons?.[y];
     if (!s || !Array.isArray(s.plots)) return '—';
-    return s.plots.map((p) => `${p.label} ${getCropName(p.cropId) ?? '—'}`).join(' · ');
+    return s.plots.map((p) => `${p.label} — ${cropNameOf(p.cropId) ?? '—'}`).join(' · ');
   };
   const selectedIds = mode === 'crop' && cropPlotId ? [cropPlotId] : editing && tool === 'merge' ? mergeSel : NO_IDS;
   const interactive = mode === 'view' || mode === 'crop' || (editing && (tool === 'merge' || tool === 'delete'));
@@ -290,7 +307,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                   <li key={p.id} className="flex min-h-[56px] items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2">
                     <PlotBadge label={p.label} />
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{getCropName(p.cropId) ?? 'Культуру не вказано'}</div>
+                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{cropNameOf(p.cropId) ?? 'Культуру не вказано'}</div>
                       <div className="text-[13px] text-muted">{formatHa(p.areaHa)}</div>
                     </div>
                     <button type="button" className="min-h-10 cursor-pointer px-1 text-[14px] font-bold text-brand-dark hover:underline" onClick={() => openCrop(p.id)}>Змінити</button>
@@ -321,12 +338,12 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                 <label htmlFor="crop-select" className="text-[13px] font-semibold text-brand-text">Культура, що росла в сезоні {effectiveYear}</label>
                 <select id="crop-select" className={INPUT_CLASS} value={cropDraft} onChange={(e) => setCropDraft(e.target.value)}>
                   <option value="">Не вказано</option>
-                  {CROPS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {cropsList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="flex flex-wrap gap-2">
-                {CROPS.slice(0, 6).map((c) => (
-                  <Chip key={c.id} active={cropDraft === c.id} onClick={() => setCropDraft(cropDraft === c.id ? '' : c.id)}>{c.name}</Chip>
+                {cropsList.slice(0, 8).map((c) => (
+                  <Chip key={c.id} active={String(cropDraft) === String(c.id)} onClick={() => setCropDraft(String(cropDraft) === String(c.id) ? '' : String(c.id))}>{c.name}</Chip>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -362,7 +379,7 @@ export default function SeasonsStep({ field, onFieldChange, onConfirm }) {
                   <li key={p.id} className="flex min-h-[52px] items-center gap-3 rounded-[14px] border border-border-main bg-white px-3.5 py-2">
                     <PlotBadge label={p.label} />
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{getCropName(p.cropId) ?? 'Культуру не вказано'}</div>
+                      <div className={`truncate text-[15px] font-semibold ${p.cropId ? 'text-brand-text' : 'text-muted'}`}>{cropNameOf(p.cropId) ?? 'Культуру не вказано'}</div>
                       <div className="text-[13px] text-muted">{formatHa(p.areaHa)}</div>
                     </div>
                     <button

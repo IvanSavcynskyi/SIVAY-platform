@@ -213,11 +213,11 @@ export default function Header({ activeLink = 'home' }) {
                 return (
                   <li key={link.id}>
                     <AppLink
-                      href={link.id === 'profile' ? '#' : link.href}
-                      ready={link.id === 'profile' ? true : link.ready}
+                      href={link.href}
+                      ready={link.ready}
                       className={linkClasses}
                       aria-current={isActive ? 'page' : undefined}
-                      onClick={link.id === 'profile' ? handleProfile : closeMenu}
+                      onClick={closeMenu}
                     >
                       <Icon name={link.icon} size={22} className="shrink-0 md:h-5 md:w-5" />
                       <span>{link.label}</span>
@@ -230,15 +230,17 @@ export default function Header({ activeLink = 'home' }) {
 
           {isAuthenticated ? (
             <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
-              <div
-                className="flex items-center gap-2 rounded-xl bg-brand-tint px-3 py-1.5 text-brand-darkest border border-[#bbf7d0]"
+              <button
+                type="button"
+                onClick={handleProfile}
+                className="flex h-14 md:h-11 w-full md:w-auto cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#bbf7d0] bg-brand-tint px-3.5 py-1.5 text-[15px] font-semibold text-brand-darkest hover:bg-[#d1fae5] transition-colors"
                 title={user?.email}
               >
                 <Icon name="user" size={18} className="text-brand-dark shrink-0" />
                 <span className="truncate text-[14px] font-semibold max-w-[140px]">
                   {user?.first_name || user?.email?.split('@')[0] || 'Акаунт'}
                 </span>
-              </div>
+              </button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -249,14 +251,17 @@ export default function Header({ activeLink = 'home' }) {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
               <Button
                 variant="secondary"
                 size="sm"
                 className="h-14 w-full text-[17px] md:h-11 md:w-auto md:text-[15px]"
                 onClick={handleLogin}
               >
-                Увійти
+                <span className="inline-flex items-center gap-2">
+                  <Icon name="user" size={18} className="shrink-0 text-brand-dark" />
+                  <span>Профіль</span>
+                </span>
               </Button>
               <Button
                 size="sm"

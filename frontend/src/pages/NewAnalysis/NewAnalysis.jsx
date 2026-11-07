@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useAuthModal } from '../../components/AuthModal/useAuthModal';
 import { getCropName } from '../../constants/crops';
+import { listCrops } from '../../services/cropsApi';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import { submitAnalysisRequest } from '../../services/analysisApi';
 import { formatHa, plotsWord } from '../../utils/format';
@@ -20,6 +21,10 @@ export default function NewAnalysis() {
       openAuth('signin');
     }
   }, [isLoading, isAuthenticated, openAuth]);
+
+  useEffect(() => {
+    listCrops().catch(() => {});
+  }, []);
 
   const [openStep, setOpenStep] = useState(1);
   const [field, setField] = useState(null);

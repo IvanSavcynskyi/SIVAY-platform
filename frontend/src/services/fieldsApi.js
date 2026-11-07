@@ -1,11 +1,10 @@
 import { apiRequest, getStoredToken } from '../components/AuthModal/authApi.js';
 import { geoJSONToPath, pathToGeoJSON, polygonAreaHa } from '../utils/geo.js';
+import { getFieldPlotsHistory, hydrateFieldSeasons } from './historyApi.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-/**
- * Нормалізує об'єкт поля, отриманий від бекенду FastAPI (GeoJSON -> Google Maps координати).
- */
+
 export function normalizeFieldResponse(field) {
   if (!field || typeof field !== 'object') return null;
 
@@ -27,9 +26,7 @@ export function normalizeFieldResponse(field) {
   };
 }
 
-/**
- * Створює об'єкт поля з наповненою структурою сезонів та початковою ділянкою.
- */
+
 function buildFieldWithSeasonPlots(fieldData, plotData, boundary, fallbackAreaHa) {
   const normalizedBoundary = Array.isArray(boundary) && boundary.length >= 3
     ? boundary
@@ -75,10 +72,7 @@ function buildFieldWithSeasonPlots(fieldData, plotData, boundary, fallbackAreaHa
   };
 }
 
-/**
- * Отримує список усіх полів поточного авторизованого користувача.
- * Поля сортуються за назвою в алфавітному порядку.
- */
+
 export async function listFields() {
   const token = getStoredToken();
   if (!token) {
@@ -101,7 +95,7 @@ export async function listFields() {
   const rawList = Array.isArray(result.data) ? result.data : [];
   const fields = rawList.map(normalizeFieldResponse).filter(Boolean);
 
-  // Сортуємо за алфавітом (українська локаль)
+ 
   fields.sort((a, b) =>
     (a.name || '').localeCompare(b.name || '', 'uk', { sensitivity: 'base', numeric: true })
   );
@@ -109,10 +103,7 @@ export async function listFields() {
   return fields;
 }
 
-/**
- * Створює нове поле на бекенді та відразу створює базову початкову ділянку (Plot #1)
- * перед переходом до Кроку 2, як вимагає контракт бекенду.
- */
+
 export async function createField({ name, region, boundary, areaHa }) {
   const token = getStoredToken();
   if (!token) {
@@ -123,7 +114,6 @@ export async function createField({ name, region, boundary, areaHa }) {
     throw new Error('Контур поля повинен мати щонайменше 3 точки.');
   }
 
-  // 1. Конвертуємо координати Google Maps у GeoJSON Polygon із замиканням контуру
   const geom = pathToGeoJSON(boundary);
 
   const payload = {
@@ -132,7 +122,6 @@ export async function createField({ name, region, boundary, areaHa }) {
     geom,
   };
 
-  // 2. Створення поля: POST /api/v1/fields/
   const fieldResult = await apiRequest('/api/v1/fields/', {
     method: 'POST',
     headers: {
@@ -149,7 +138,7 @@ export async function createField({ name, region, boundary, areaHa }) {
   const fieldData = fieldResult.data;
   const fieldId = fieldData.id;
 
-  // 3. Створення початкової ділянки: POST /api/v1/fields/{field_id}/plots/
+ 
   let plotData = null;
   const plotResult = await apiRequest(`/api/v1/fields/${fieldId}/plots/`, {
     method: 'POST',
@@ -167,17 +156,13 @@ export async function createField({ name, region, boundary, areaHa }) {
   return buildFieldWithSeasonPlots(fieldData, plotData, boundary, areaHa);
 }
 
-/**
- * Завантажує поле разом із його ділянками для повноцінної роботи на Кроці 2.
- * Якщо поле збережене раніше і ще не має ділянок, автоматично створює базову.
- */
+
 export async function getFieldWithPlots(fieldId) {
   const token = getStoredToken();
   if (!token) {
     throw new Error('Для вибору поля увійдіть, будь ласка, до свого акаунта.');
   }
 
-  // 1. Отримуємо дані поля: GET /api/v1/fields/{field_id}
   const fieldResult = await apiRequest(`/api/v1/fields/${fieldId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -191,7 +176,7 @@ export async function getFieldWithPlots(fieldId) {
   const fieldData = fieldResult.data;
   const boundary = geoJSONToPath(fieldData.geom);
 
-  // 2. Отримуємо існуючі ділянки поля: GET /api/v1/fields/{field_id}/plots/
+  
   const plotsResult = await apiRequest(`/api/v1/fields/${fieldId}/plots/`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -208,7 +193,7 @@ export async function getFieldWithPlots(fieldId) {
       cropId: null,
     }));
   } else {
-    // Якщо ділянок ще немає в базі, створюємо базову
+   
     const geom = pathToGeoJSON(boundary);
     const newPlotResult = await apiRequest(`/api/v1/fields/${fieldId}/plots/`, {
       method: 'POST',
@@ -243,6 +228,9 @@ export async function getFieldWithPlots(fieldId) {
     }
   }
 
+  const historyMap = await getFieldPlotsHistory(plots);
+  const seasons = hydrateFieldSeasons(fieldData, plots, historyMap);
+
   return {
     id: fieldData.id,
     name: fieldData.name || 'Поле',
@@ -252,20 +240,11 @@ export async function getFieldWithPlots(fieldId) {
     total_area: fieldData.total_area,
     geom: fieldData.geom,
     user_id: fieldData.user_id,
-    seasons: {
-      [CURRENT_YEAR]: {
-        year: CURRENT_YEAR,
-        plots,
-        updatedAt: new Date().toISOString(),
-      },
-    },
+    seasons,
   };
 }
 
-/**
- * Видаляє поле за ID.
- * Завдяки каскадному видаленню на бекенді (CASCADE) автоматично видаляються всі ділянки.
- */
+
 export async function deleteField(fieldId) {
   const token = getStoredToken();
   if (!token) {

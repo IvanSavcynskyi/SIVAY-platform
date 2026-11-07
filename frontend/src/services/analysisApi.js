@@ -1,4 +1,5 @@
 import { makePlot } from '../pages/NewAnalysis/lib/plots.js';
+import { savePlotCropHistory } from './historyApi.js';
 
 const STORAGE_KEY = 'sivay.analysis.v1';
 const CURRENT_YEAR = new Date().getFullYear();
@@ -28,7 +29,7 @@ function normalizeField(field) {
       const year = Number(y);
       if (Number.isFinite(year) && s && typeof s === 'object') {
         const rawPlots = Array.isArray(s.plots) ? s.plots : [];
-        const plots = rawPlots.filter((p) => p && Array.isArray(p.path)).map(cleanPlot);
+        const plots = rawPlots.filter(Boolean).map((p) => cleanPlot({ ...p, path: Array.isArray(p.path) ? p.path : boundary }));
         seasons[year] = {
           year,
           plots: plots.length > 0 ? plots : [cleanPlot(makePlot(boundary, { label: 'A' }))],
@@ -82,7 +83,13 @@ function write(db) {
 }
 
 function getField(db, fieldId) {
-  const field = db.fields.find((f) => f.id === fieldId);
+  const targetId = typeof fieldId === 'object' && fieldId?.id != null ? fieldId.id : fieldId;
+  let field = db.fields.find((f) => String(f.id) === String(targetId));
+  if (!field && typeof fieldId === 'object' && fieldId?.id != null) {
+    field = normalizeField(clone(fieldId));
+    db.fields.push(field);
+    write(db);
+  }
   if (!field) throw fail('FIELD_NOT_FOUND', 'Поле не знайдено.');
   return field;
 }
@@ -197,8 +204,20 @@ export async function saveCropRecord(fieldId, year, plotId, cropId) {
   const numericYear = Number(year);
   const season = field.seasons?.[numericYear];
   if (!season) throw fail('SEASON_NOT_FOUND', 'Сезон не знайдено.');
-  const plot = season.plots?.find((p) => p.id === plotId);
+  const plot = season.plots?.find((p) => String(p.id) === String(plotId));
   if (!plot) throw fail('PLOT_NOT_FOUND', 'Ділянку не знайдено.');
+  if (cropId && Number.isInteger(Number(plotId)) && Number(plotId) > 0) {
+    try {
+      await savePlotCropHistory({
+        plotId: Number(plotId),
+        year: numericYear,
+        cropId,
+      });
+    } catch {
+    
+    }
+  }
+
   plot.cropId = cropId || null;
   season.updatedAt = new Date().toISOString();
   write(db);
