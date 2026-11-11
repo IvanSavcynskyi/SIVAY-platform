@@ -28,6 +28,7 @@ htmlcov/
 
 # Tests & Docs (not needed in production image)
 tests/
+checks/
 
 # Temporary files & logs
 *.log

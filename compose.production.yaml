@@ -1,0 +1,57 @@
+name: sivay-platform
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  backend:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/sivay-platform-backend:${RELEASE_TAG:?Set RELEASE_TAG}
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.75
+    env_file: ./deploy/backend.env
+    environment:
+      RUN_MIGRATIONS: "false"
+      SQL_ECHO: "false"
+      POSTGRES_SSL_MODE: verify-full
+      POSTGRES_SSL_ROOT_CERT: /etc/ssl/certs/rds-global-bundle.pem
+    volumes:
+      - type: bind
+        source: ./deploy/certs/global-bundle.pem
+        target: /etc/ssl/certs/rds-global-bundle.pem
+        read_only: true
+        bind:
+          create_host_path: false
+    # Only the frontend can reach this API; no host port is published.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    networks:
+      app:
+        aliases: [sivay-platform-api]
+    logging: *logging
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/sivay-platform-frontend:${RELEASE_TAG:?Set RELEASE_TAG}
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 64m
+    cpus: 0.25
+    ports:
+      - "127.0.0.1:${PLATFORM_HTTP_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      app:
+      proxy:
+        aliases: [sivay-platform-web]
+    logging: *logging
+
+networks:
+  app:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:?Set the existing Caddy Docker network}

@@ -12,7 +12,11 @@ from app.core.config import settings
 # --- Async Engine ---
 engine = create_async_engine(
     settings.ASYNC_DATABASE_URL,
-    echo=True,
+    connect_args=settings.DATABASE_CONNECT_ARGS,
+    echo=settings.SQL_ECHO,
+    pool_pre_ping=True,
+    pool_size=2,
+    max_overflow=3,
 )
 
 # --- Session Factory ---

@@ -1,0 +1,5 @@
+# Append this block to the model's existing Caddyfile, replacing the domain.
+# Keep the existing model host block and its TLS settings.
+sivay.tech {
+    reverse_proxy sivay-platform-web:8080
+}

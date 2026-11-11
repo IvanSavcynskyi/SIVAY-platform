@@ -1,0 +1,10 @@
+.DS_Store
+deploy/backend.env
+deploy/runtime.env
+deploy/certs/
+deploy/current-release
+deploy/previous-release
+deploy/.deploy.lock
+deploy/.update.lock
+frontend/.env*
+!frontend/.env.example

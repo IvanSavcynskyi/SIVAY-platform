@@ -1,0 +1,89 @@
+name: Platform ARM64 release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: sivay-platform-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build and verify ARM64 images
+        env:
+          VITE_GOOGLE_MAPS_API_KEY: ${{ vars.VITE_GOOGLE_MAPS_API_KEY }}
+          VITE_GOOGLE_MAPS_MAP_ID: ${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          backend="ghcr.io/$owner/sivay-platform-backend:$GITHUB_SHA"
+          frontend="ghcr.io/$owner/sivay-platform-frontend:$GITHUB_SHA"
+          docker build --platform linux/arm64 \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            -t "$backend" backend
+          docker run --rm --entrypoint python \
+            -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e SECRET_KEY=ci-test-only \
+            -v "$PWD/backend/checks:/checks:ro" \
+            "$backend" -m unittest discover -s /checks -v
+          docker run --rm --entrypoint python \
+            -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e SECRET_KEY=ci-test-only \
+            "$backend" -c 'import app.main; from app.core.security import get_password_hash, verify_password; assert verify_password("smoke-test", get_password_hash("smoke-test"))'
+          docker build --platform linux/arm64 \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY --build-arg VITE_GOOGLE_MAPS_MAP_ID \
+            -t "$frontend" frontend
+          docker run --rm "$frontend" nginx -t
+      - name: Publish release images
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          docker push "ghcr.io/$owner/sivay-platform-backend:$GITHUB_SHA"
+          docker push "ghcr.io/$owner/sivay-platform-frontend:$GITHUB_SHA"
+
+  deploy:
+    needs: publish
+    if: vars.EC2_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Deploy the published commit through restricted SSH
+        env:
+          EC2_HOST: ${{ vars.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d "$RUNNER_TEMP/sivay-ssh"
+          printf '%s\n' "$EC2_SSH_KEY" > "$RUNNER_TEMP/sivay-ssh/key"
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > "$RUNNER_TEMP/sivay-ssh/known_hosts"
+          chmod 600 "$RUNNER_TEMP/sivay-ssh/key" "$RUNNER_TEMP/sivay-ssh/known_hosts"
+          printf '%s\n' "$GHCR_TOKEN" | ssh \
+            -i "$RUNNER_TEMP/sivay-ssh/key" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/sivay-ssh/known_hosts" \
+            -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+            "ubuntu@$EC2_HOST" "deploy $GITHUB_SHA $GITHUB_ACTOR"

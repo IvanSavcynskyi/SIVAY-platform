@@ -3,7 +3,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 
@@ -83,12 +83,11 @@ async def run_async_migrations() -> None:
 
     """
 
-    # Inject the URL from our settings so alembic.ini doesn't need a hardcoded URL.
-    config.set_main_option("sqlalchemy.url", settings.ASYNC_DATABASE_URL)
-
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    # Pass the URL object directly: ConfigParser interpolation would alter %
+    # characters in credentials. Use the same TLS configuration as the API.
+    connectable = create_async_engine(
+        settings.ASYNC_DATABASE_URL,
+        connect_args=settings.DATABASE_CONNECT_ARGS,
         poolclass=pool.NullPool,
     )
 
