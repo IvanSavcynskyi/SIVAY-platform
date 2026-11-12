@@ -20,6 +20,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 git fetch origin main
 git merge-base --is-ancestor "$release" FETCH_HEAD
+git cat-file -e "$release:deploy/release.sh"
 git checkout --detach "$release"
 
 # The short-lived, read-only GITHUB_TOKEN arrives on stdin and is never logged.

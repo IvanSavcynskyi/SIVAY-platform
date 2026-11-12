@@ -22,6 +22,10 @@ for file in deploy/runtime.env deploy/backend.env deploy/certs/global-bundle.pem
         exit 1
     fi
 done
+if grep -Eq 'your-database|replace-with-database-password|replace-with-output-of-openssl' deploy/backend.env; then
+    echo "RDS configuration is incomplete. Edit /home/ubuntu/SIVAY-platform/deploy/backend.env before deployment." >&2
+    exit 1
+fi
 
 # Also serializes manual deployments with GitHub Actions deployments.
 exec 9>deploy/.deploy.lock
