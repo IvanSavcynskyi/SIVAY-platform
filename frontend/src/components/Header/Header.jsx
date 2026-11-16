@@ -146,7 +146,7 @@ export default function Header({ activeLink = 'home' }) {
 
   return (
     <header
-  className={`fixed top-0 left-0 z-[80] w-full border-b border-border-main bg-white transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+  className={`fixed top-0 left-0 z-[80] w-full border-b border-border-main bg-white transition-transform duration-300 ease-in-out ${isVisible ? '' : '-translate-y-full'}`}>
       <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center justify-between px-4 py-3 md:flex-wrap md:gap-y-4 md:px-8 md:py-5 xl:min-h-[88px] xl:flex-nowrap xl:py-4">
         <AppLink href="/" className="ml-0 mr-auto flex shrink-0 items-center gap-2.5 text-inherit no-underline md:ml-0 md:gap-3" aria-label="SIVAY — на головну">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#DCFCE7] text-brand-darkest shadow-button md:h-10 md:w-10">
@@ -171,7 +171,7 @@ export default function Header({ activeLink = 'home' }) {
 
         {}
         <div
-          className={`fixed inset-0 z-[90] bg-[rgba(16,26,36,0.45)] transition-[opacity,visibility] duration-250 ease-out md:hidden ${
+          className={`fixed inset-0 z-[90] h-screen h-[100dvh] w-screen bg-[rgba(16,26,36,0.45)] transition-[opacity,visibility] duration-250 ease-out md:hidden ${
             isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0'
           }`}
           onClick={closeMenuAndReturnFocus}
@@ -182,7 +182,7 @@ export default function Header({ activeLink = 'home' }) {
         <div
           id="site-menu"
           ref={menuRef}
-          className={`fixed top-0 right-0 bottom-0 z-[100] flex w-[min(300px,100%)] flex-col gap-5 overflow-y-auto rounded-l-3xl border border-r-0 border-border-soft bg-white p-5 pb-6 shadow-[0_0_20px_rgba(13,45,32,0.2)] transition-[transform,visibility] duration-250 ease-out md:contents md:visible md:translate-x-0 ${
+          className={`fixed top-0 right-0 bottom-0 z-[100] flex h-screen h-[100dvh] w-[min(300px,100%)] flex-col gap-5 overflow-y-auto rounded-l-3xl border border-r-0 border-border-soft bg-white p-5 pb-6 shadow-[0_0_20px_rgba(13,45,32,0.2)] transition-[transform,visibility] duration-250 ease-out md:contents md:visible md:translate-x-0 ${
             isOpen ? 'visible translate-x-0' : 'invisible translate-x-full md:visible md:translate-x-0'
           }`}
         >
@@ -197,7 +197,7 @@ export default function Header({ activeLink = 'home' }) {
           </button>
 
           <nav className="md:order-3 md:flex-[1_0_100%] xl:order-none xl:mr-8 xl:flex-none" aria-label="Основна навігація">
-            <ul className="m-0 flex list-none flex-col gap-1.5 p-0 md:flex-row md:justify-between xl:gap-2">
+            <ul className="m-0 flex list-none flex-col gap-1.5 p-0 md:flex-row md:items-center md:justify-between xl:justify-start xl:gap-2">
               {NAV_LINKS.map((link) => {
                 const isActive = link.id === activeLink;
 
@@ -229,7 +229,7 @@ export default function Header({ activeLink = 'home' }) {
           </nav>
 
           {isAuthenticated ? (
-            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+            <div className="flex shrink-0 flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
               <div
                 className="flex items-center gap-2 rounded-xl bg-brand-tint px-3 py-1.5 text-brand-darkest border border-[#bbf7d0]"
                 title={user?.email}
@@ -249,7 +249,7 @@ export default function Header({ activeLink = 'home' }) {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
+            <div className="flex shrink-0 flex-col gap-2.5 border-t border-border-main pt-5 md:order-2 md:flex-row md:items-center md:gap-3 md:border-t-0 md:pt-0 xl:order-none">
               <Button
                 variant="secondary"
                 size="sm"

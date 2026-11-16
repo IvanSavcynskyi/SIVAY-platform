@@ -9,7 +9,7 @@ export default function PublicLayout({ activeLink = 'home', children }) {
     <NoticeProvider>
       <AuthProvider>
         <AuthModalProvider>
-          <div className="flex min-h-screen min-h-dvh flex-col">
+          <div className="flex min-h-screen min-h-dvh w-full flex-col">
             <a
               className="absolute top-2 left-2 z-[2000] -translate-y-[200%] rounded-[10px] bg-brand-dark px-4 py-2.5 font-semibold text-white no-underline transition-transform focus:translate-y-0"
               href="#main-content"
@@ -17,7 +17,7 @@ export default function PublicLayout({ activeLink = 'home', children }) {
               Перейти до основного вмісту
             </a>
             <Header activeLink={activeLink} />
-            <main id="main-content" className="flex-1 pt-[72px] xl:pt-[88px]">
+            <main id="main-content" className="w-full flex-1 pt-[72px] xl:pt-[88px]">
               {children}
             </main>
             <Footer />

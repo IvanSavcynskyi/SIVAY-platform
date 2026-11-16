@@ -90,6 +90,13 @@
   --page-max-width: 1440px;
 }
 
+/* Prevent horizontal scroll on all viewports */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   margin: 0;
   font-family: var(--font-main);
@@ -98,6 +105,12 @@ body {
   color: var(--color-text);
   background: var(--color-surface);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure React root spans full viewport width */
+#root {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 img,

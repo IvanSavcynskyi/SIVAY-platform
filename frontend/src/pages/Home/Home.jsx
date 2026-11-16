@@ -153,7 +153,7 @@ export default function Home() {
     <>
       {/* Hero section */}
       <section
-        className="relative flex items-center bg-brand-dark bg-cover bg-center py-[18px] pb-6 text-white [background-image:linear-gradient(90deg,rgba(5,47,35,0.7),rgba(5,47,35,0.3)),url('/images/hero.jpg')] md:py-12 md:pb-16 xl:min-h-[800px] xl:py-16 xl:pb-[88px]"
+        className="relative flex w-full items-center bg-brand-dark bg-cover bg-center py-[18px] pb-6 text-white [background-image:linear-gradient(90deg,rgba(5,47,35,0.7),rgba(5,47,35,0.3)),url('/images/hero.jpg')] md:py-12 md:pb-16 xl:min-h-[800px] xl:py-16 xl:pb-[88px]"
         aria-labelledby="hero-title"
       >
         <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 xl:px-20">
@@ -168,12 +168,12 @@ export default function Home() {
               SIVAY аналізує стан ґрунту, погодні умови, попередні культури, ринкові ціни та
               логістичні витрати, щоб допомогти вам прийняти обґрунтоване рішення щодо посіву.
             </p>
-            <div className="flex w-full gap-2.5 md:w-auto md:gap-3.5">
+            <div className="flex w-full flex-col gap-2.5 sm:flex-row md:w-auto md:gap-3.5">
               <Button
                 href={ANALYSIS_LINK.href}
                 ready={ANALYSIS_LINK.ready}
                 arrow
-                className="h-auto min-h-12 w-full flex-1 whitespace-normal px-3 py-2 text-center text-[15px] md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px] [&_svg]:hidden md:[&_svg]:block"
+                className="h-12 w-full px-5 text-[15px] sm:h-auto sm:min-h-12 sm:flex-1 md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px] [&_svg]:hidden md:[&_svg]:block"
               >
                 Перейти до аналізу
               </Button>
@@ -181,7 +181,7 @@ export default function Home() {
                 variant="secondary"
                 href="#why-sivay"
                 onClick={scrollToWhy}
-                className="h-auto min-h-12 w-full flex-1 whitespace-normal px-3 py-2 text-center text-[15px] md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px]"
+                className="h-12 w-full px-5 text-[15px] sm:h-auto sm:min-h-12 sm:flex-1 md:h-14 md:min-h-0 md:w-auto md:flex-none md:whitespace-nowrap md:px-7 md:py-0 md:text-[17px]"
               >
                 Дізнатися більше
               </Button>
@@ -210,7 +210,7 @@ export default function Home() {
               Чому SIVAY
             </h2>
           </header>
-          <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:gap-4 xl:grid-cols-4 xl:gap-5">
+          <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 min-[360px]:grid-cols-2 md:gap-4 xl:grid-cols-4 xl:gap-5">
             {VALUE_CARDS.map((card) => (
               <li
                 key={card.id}
@@ -299,7 +299,7 @@ export default function Home() {
               Чотири ключові чинники, які SIVAY бере до уваги для вашого поля.
             </p>
           </header>
-          <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:gap-4 xl:grid-cols-4 xl:gap-5">
+          <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 min-[360px]:grid-cols-2 md:gap-4 xl:grid-cols-4 xl:gap-5">
             {BENEFIT_CARDS.map((card) => (
               <li
                 key={card.id}
