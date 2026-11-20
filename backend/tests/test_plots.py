@@ -196,3 +196,28 @@ async def test_delete_plot(async_client: AsyncClient, auth_headers: dict):
         f"/api/v1/fields/{field_id}/plots/{plot_id}", headers=auth_headers
     )
     assert get_resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_create_and_update_plot_with_label(async_client: AsyncClient, auth_headers: dict):
+    """Створення та оновлення ділянки з міткою label (A, B, C...)."""
+    field_id = await _create_field(async_client, auth_headers)
+
+    create_resp = await async_client.post(
+        f"/api/v1/fields/{field_id}/plots/",
+        json={"geom": VALID_PLOT_GEOJSON, "label": "A"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+    data = create_resp.json()
+    assert data["label"] == "A"
+    plot_id = data["id"]
+
+    # Оновлення label через PUT
+    update_resp = await async_client.put(
+        f"/api/v1/fields/{field_id}/plots/{plot_id}",
+        json={"label": "B"},
+        headers=auth_headers,
+    )
+    assert update_resp.status_code == 200
+    assert update_resp.json()["label"] == "B"

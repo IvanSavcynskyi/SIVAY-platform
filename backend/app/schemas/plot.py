@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field as PydanticField, model_valida
 
 
 class PlotBase(BaseModel):
+    label: str | None = None
     geom: Dict[str, Any] = PydanticField(..., description="GeoJSON Polygon")
 
 
@@ -12,6 +13,7 @@ class PlotCreate(PlotBase):
 
 
 class PlotUpdate(BaseModel):
+    label: str | None = None
     geom: Dict[str, Any] | None = None
 
 

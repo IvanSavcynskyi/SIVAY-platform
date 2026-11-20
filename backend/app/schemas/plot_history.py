@@ -10,6 +10,13 @@ class PlotHistoryCreate(BaseModel):
     year: int
 
 
+class PlotHistoryUpdate(BaseModel):
+    """Схема для оновлення запису в історії посівів."""
+
+    crop_id: int | None = None
+    year: int | None = None
+
+
 class PlotHistoryResponse(BaseModel):
     """Схема відповіді для запису історії посівів."""
 
