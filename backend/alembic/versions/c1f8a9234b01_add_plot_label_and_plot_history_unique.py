@@ -22,6 +22,26 @@ def upgrade() -> None:
     # Додавання поля label до таблиці plots
     op.add_column('plots', sa.Column('label', sa.String(), nullable=True))
 
+    # Existing databases may contain more than one row for a (plot_id, year)
+    # pair.  Keep the newest row so the unique constraint can be created.
+    op.execute(sa.text(
+        """
+        DELETE FROM plot_history
+        WHERE id IN (
+            SELECT id
+            FROM (
+                SELECT id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY plot_id, year
+                           ORDER BY id DESC
+                       ) AS duplicate_rank
+                FROM plot_history
+            ) ranked_duplicates
+            WHERE duplicate_rank > 1
+        )
+        """
+    ))
+
     # Додавання унікального обмеження (plot_id, year) до таблиці plot_history
     op.create_unique_constraint(
         'uq_plot_history_plot_id_year',
@@ -33,4 +53,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_constraint('uq_plot_history_plot_id_year', 'plot_history', type_='unique')
     op.drop_column('plots', 'label')
-
