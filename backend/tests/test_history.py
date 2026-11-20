@@ -237,3 +237,86 @@ async def test_history_requires_auth(async_client: AsyncClient, auth_headers: di
     # Запит без токена
     response = await async_client.get(f"/api/v1/plots/{plot_id}/history/")
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_plot_history_upsert_and_crud(
+    async_client: AsyncClient,
+    auth_headers: dict,
+    seeded_crop: int,
+    db_session: AsyncSession,
+):
+    """Тест upsert (POST з однаковим роком оновлює crop_id), а також PUT та DELETE."""
+    # Створимо поле та ділянку
+    field_resp = await async_client.post(
+        "/api/v1/fields/",
+        json={"name": "Поле для upsert тесту", "geom": FIELD_GEOJSON},
+        headers=auth_headers,
+    )
+    field_id = field_resp.json()["id"]
+
+    plot_resp = await async_client.post(
+        f"/api/v1/fields/{field_id}/plots/",
+        json={"geom": VALID_PLOT_GEOJSON, "label": "A"},
+        headers=auth_headers,
+    )
+    plot_id = plot_resp.json()["id"]
+
+    # 1. Перший POST: 2024 рік, seeded_crop
+    create_resp1 = await async_client.post(
+        f"/api/v1/plots/{plot_id}/history/",
+        json={"crop_id": seeded_crop, "year": 2024},
+        headers=auth_headers,
+    )
+    assert create_resp1.status_code == 201
+    hist_id = create_resp1.json()["id"]
+    assert create_resp1.json()["crop_id"] == seeded_crop
+
+    # 2. Створимо другу культуру в БД для зміни
+    from app.models.crop import Crop
+    second_crop = Crop(name="Кукурудза Тестова")
+    db_session.add(second_crop)
+    await db_session.commit()
+    await db_session.refresh(second_crop)
+
+    # 3. Другий POST на той самий рік 2024 — перевіряємо UPSERT
+    create_resp2 = await async_client.post(
+        f"/api/v1/plots/{plot_id}/history/",
+        json={"crop_id": second_crop.id, "year": 2024},
+        headers=auth_headers,
+    )
+    assert create_resp2.status_code == 201
+    assert create_resp2.json()["id"] == hist_id  # той самий запис!
+    assert create_resp2.json()["crop_id"] == second_crop.id
+
+    # Перевіримо, що запис в історії тільки ОДИН
+    list_resp = await async_client.get(
+        f"/api/v1/plots/{plot_id}/history/",
+        headers=auth_headers,
+    )
+    assert list_resp.status_code == 200
+    assert len(list_resp.json()) == 1
+
+    # 4. Перевірка PUT: зміна назад на seeded_crop
+    put_resp = await async_client.put(
+        f"/api/v1/plots/{plot_id}/history/{hist_id}",
+        json={"crop_id": seeded_crop},
+        headers=auth_headers,
+    )
+    assert put_resp.status_code == 200
+    assert put_resp.json()["crop_id"] == seeded_crop
+
+    # 5. Перевірка DELETE: видалення запису
+    delete_resp = await async_client.delete(
+        f"/api/v1/plots/{plot_id}/history/{hist_id}",
+        headers=auth_headers,
+    )
+    assert delete_resp.status_code == 204
+
+    # Перевірка: список порожній
+    list_after_delete = await async_client.get(
+        f"/api/v1/plots/{plot_id}/history/",
+        headers=auth_headers,
+    )
+    assert list_after_delete.status_code == 200
+    assert len(list_after_delete.json()) == 0

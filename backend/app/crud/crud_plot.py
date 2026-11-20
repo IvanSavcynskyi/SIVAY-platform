@@ -42,6 +42,7 @@ async def create_plot(
 
     db_obj = Plot(
         field_id=field_id,
+        label=plot_in.label,
         total_area=total_area,
         geom=geom_expr,
     )
