@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useAuthModal } from '../../components/AuthModal/useAuthModal';
 import { getCropName } from '../../constants/crops';
+import { listCrops } from '../../services/cropsApi';
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary';
 import { submitAnalysisRequest } from '../../services/analysisApi';
 import { formatHa, plotsWord } from '../../utils/format';
@@ -20,6 +21,10 @@ export default function NewAnalysis() {
       openAuth('signin');
     }
   }, [isLoading, isAuthenticated, openAuth]);
+
+  useEffect(() => {
+    listCrops().catch(() => {});
+  }, []);
 
   const [openStep, setOpenStep] = useState(1);
   const [field, setField] = useState(null);
@@ -55,7 +60,12 @@ export default function NewAnalysis() {
   };
 
   const handleSeasonConfirm = (year) => {
-    setSeasonYear(year);
+    const currentYear = new Date().getFullYear();
+    const targetYear =
+      field?.seasons && currentYear in field.seasons
+        ? currentYear
+        : (year ?? (field?.seasons && Object.keys(field.seasons).length > 0 ? Math.max(...Object.keys(field.seasons).map(Number)) : currentYear));
+    setSeasonYear(targetYear);
     setResult(null);
     setOpenStep(3);
   };

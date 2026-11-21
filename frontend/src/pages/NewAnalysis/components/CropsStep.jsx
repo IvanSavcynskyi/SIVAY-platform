@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import Button from '../../../components/Button/Button';
 import { IconCheck, IconSearch, IconShield } from '../../../components/AnalysisIcons/AnalysisIcons';
 import { CROPS } from '../../../constants/crops';
+import { listCrops } from '../../../services/cropsApi';
 import { listCropProposals, proposeCrop } from '../../../services/analysisApi';
 import { formatHa } from '../../../utils/format';
 import { INPUT_CLASS, InfoNote, LinkButton } from './ui';
@@ -13,6 +14,19 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
   const [proposalName, setProposalName] = useState('');
   const [proposalError, setProposalError] = useState('');
   const [proposals, setProposals] = useState([]);
+  const [cropsList, setCropsList] = useState(CROPS);
+
+  useEffect(() => {
+    let cancelled = false;
+    listCrops().then((list) => {
+      if (!cancelled && Array.isArray(list) && list.length > 0) {
+        setCropsList(list);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,8 +44,8 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? CROPS.filter((c) => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : CROPS;
-  }, [query]);
+    return q ? cropsList.filter((c) => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : cropsList;
+  }, [query, cropsList]);
 
   const toggle = (id) => onChange(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
 
@@ -41,7 +55,7 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
       setProposalError('Вкажіть назву культури.');
       return;
     }
-    if (CROPS.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+    if (cropsList.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
       setProposalError('Така культура вже є у списку.');
       return;
     }
@@ -64,7 +78,7 @@ export default function CropsStep({ field, season, selectedIds, onChange, onBack
       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl bg-surface-panel px-4 py-3.5 md:px-5">
         {[
           ['Поле', `${field?.name || 'Поле'} · ${formatHa(field?.areaHa)}`],
-          ['Сезон', String(season?.year ?? '—')],
+          ['Сезон', String(season?.year ?? new Date().getFullYear())],
           ['Ділянки', `${seasonPlots.length} — ${labels || '—'}`],
         ].map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
